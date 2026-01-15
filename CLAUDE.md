@@ -46,6 +46,21 @@ bun test           # 运行测试
 2. **功能聚合** - 相关功能归类到同一入口
 3. **渐进复杂** - 简单操作易触达，高级功能可折叠
 
+## Data Rules
+
+**重要**: 页面能够获得的数据必须严格参照老项目实现。
+
+- **禁止臆造数据**: 不要假设或编造 API 返回的数据字段，必须查看老项目的实际实现
+- **参考老项目服务层**: 查看 `/Users/joshua/Dev/fibos/eoseco-explorer-frontend/src/app/services/` 了解数据获取方式
+- **参考老项目组件**: 查看具体组件如何调用服务、处理数据、展示字段
+- **API 对照**: 使用的 RPC 方法和参数必须与老项目一致
+- **字段映射**: 页面展示的数据字段必须是 API 实际返回的字段，不能自行添加
+
+示例：如果要实现账户页面，必须先查看：
+1. `src/app/services/eos.service.ts` - 了解 `getAccount()` 的实现
+2. `src/app/components/account/` - 了解账户组件如何使用数据
+3. 确认实际可用的字段后再进行页面开发
+
 ## Project Structure
 
 ```

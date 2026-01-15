@@ -1,13 +1,11 @@
 import { SearchBoxCool } from '@/components/features/SearchBoxCool'
-import { ThemeToggle } from '@/components/features/ThemeToggle'
+import { Navbar } from '@/components/layout/Navbar'
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
-      {/* Theme toggle */}
-      <div className="absolute top-6 right-6 z-20">
-        <ThemeToggle />
-      </div>
+    <>
+      <Navbar transparent showSearch={false} />
+      <main className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
 
       {/* Animated background - Light */}
       <div className="absolute inset-0 dark:hidden">
@@ -59,6 +57,7 @@ export default function HomePage() {
           </span>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   )
 }
