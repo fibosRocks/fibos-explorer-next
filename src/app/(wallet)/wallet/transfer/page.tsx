@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Send, Wallet, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { useWalletStore } from '@/stores/walletStore'
+import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { cn } from '@/lib/utils'
 
 export default function TransferPage() {
@@ -15,7 +16,7 @@ export default function TransferPage() {
   const [showTokenMenu, setShowTokenMenu] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [success, setSuccess] = useState<{ message: string; txId?: string } | null>(null)
 
   // 获取可用代币列表
   const tokens = balances.length > 0
@@ -88,7 +89,10 @@ export default function TransferPage() {
         },
       }])
 
-      setSuccess(`转账成功！交易ID: ${result.transaction_id.substring(0, 16)}...`)
+      setSuccess({
+        message: '转账成功！',
+        txId: result.transaction_id
+      })
       setTo('')
       setAmount('')
       setMemo('')
@@ -238,9 +242,11 @@ export default function TransferPage() {
               </div>
             )}
             {success && (
-              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-sm">
-                {success}
-              </div>
+              <TransactionSuccess
+                message={success.message}
+                txId={success.txId}
+                className="mb-6"
+              />
             )}
 
             {/* Submit Button */}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Vote, Users, TrendingUp, Search, CheckSquare, Square, AlertCircle, UserCheck, ArrowRight, Loader2 } from 'lucide-react'
+import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { cn } from '@/lib/utils'
 import * as eosClient from '@/lib/services/eos-client'
 import type { Producer } from '@/lib/services/types'
@@ -53,8 +54,13 @@ export default function VotingPage() {
 
   // 投票中状态
   const [voting, setVoting] = useState(false)
-  const [voteSuccess, setVoteSuccess] = useState<string | null>(null)
+  const [voteSuccess, setVoteSuccess] = useState<{ message: string; txId?: string } | null>(null)
   const [voteError, setVoteError] = useState<string | null>(null)
+
+  // 代理设置状态
+  const [proxyVoting, setProxyVoting] = useState(false)
+  const [proxySuccess, setProxySuccess] = useState<{ message: string; txId?: string } | null>(null)
+  const [proxyError, setProxyError] = useState<string | null>(null)
 
   // 计算抵押数量
   const staked = accountStatus?.staked || 0
@@ -179,7 +185,10 @@ export default function VotingPage() {
         },
       }])
 
-      setVoteSuccess(`投票成功！交易ID: ${result.transaction_id.substring(0, 16)}...`)
+      setVoteSuccess({
+        message: '投票成功！',
+        txId: result.transaction_id
+      })
     } catch (err) {
       setVoteError(err instanceof Error ? err.message : '投票失败')
     } finally {
@@ -196,13 +205,13 @@ export default function VotingPage() {
 
     const permission = getPermission()
     if (!permission) {
-      setVoteError('无法获取账户权限')
+      setProxyError('无法获取账户权限')
       return
     }
 
-    setVoting(true)
-    setVoteError(null)
-    setVoteSuccess(null)
+    setProxyVoting(true)
+    setProxyError(null)
+    setProxySuccess(null)
 
     try {
       const result = await transact([{
@@ -216,11 +225,17 @@ export default function VotingPage() {
         },
       }])
 
-      setVoteSuccess(`已设置投票代理！交易ID: ${result.transaction_id.substring(0, 16)}...`)
+      setProxySuccess({
+        message: '已设置投票代理！',
+        txId: result.transaction_id
+      })
+
+      // 清空本地选择，避免 UI 混淆
+      setSelectedProducers(new Set())
     } catch (err) {
-      setVoteError(err instanceof Error ? err.message : '设置代理失败')
+      setProxyError(err instanceof Error ? err.message : '设置代理失败')
     } finally {
-      setVoting(false)
+      setProxyVoting(false)
     }
   }
 
@@ -329,10 +344,10 @@ export default function VotingPage() {
             </div>
             <button
               onClick={handleSetProxy}
-              disabled={voting}
+              disabled={proxyVoting}
               className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50"
             >
-              {voting ? (
+              {proxyVoting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
@@ -343,6 +358,18 @@ export default function VotingPage() {
             </button>
           </div>
         </div>
+        {proxyError && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            {proxyError}
+          </div>
+        )}
+        {proxySuccess && (
+          <TransactionSuccess
+            message={proxySuccess.message}
+            txId={proxySuccess.txId}
+            className="mt-4 bg-emerald-500/10 border-emerald-500/20"
+          />
+        )}
         <div className="mt-4 pt-4 border-t border-amber-500/20">
           <p className="text-xs text-slate-500 dark:text-slate-400">
             投票代理机制允许您将投票权委托给信任的代理人。代理人会根据其专业判断为您投票，您的票权会自动跟随代理人的投票选择。您可以随时取消代理或更换代理人。
@@ -384,9 +411,11 @@ export default function VotingPage() {
             </div>
           )}
           {voteSuccess && (
-            <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-sm">
-              {voteSuccess}
-            </div>
+            <TransactionSuccess
+              message={voteSuccess.message}
+              txId={voteSuccess.txId}
+              className="mt-4 bg-emerald-500/10 border-emerald-500/20"
+            />
           )}
 
           {/* Vote Button */}
