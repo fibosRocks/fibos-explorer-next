@@ -99,6 +99,9 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Mobile/Tablet Search Icon */}
+          <NavbarSearch mode="icon" className="lg:hidden" />
+
           {/* Language Switcher */}
           <div className="relative">
             <button

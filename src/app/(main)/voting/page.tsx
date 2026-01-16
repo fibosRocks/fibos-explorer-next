@@ -1,54 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Vote, Users, TrendingUp, Search, CheckSquare, Square, AlertCircle, UserCheck, ArrowRight } from 'lucide-react'
+import { Vote, Users, TrendingUp, Search, CheckSquare, Square, AlertCircle, UserCheck, ArrowRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import * as eosClient from '@/lib/services/eos-client'
+import type { Producer } from '@/lib/services/types'
 
 /**
  * 投票页面
  *
  * 数据来源 (参考老项目 voting/voting.component.ts):
- * - eosService.eos.getTableRows("eosio", "eosio", "global") -> total_producer_vote_weight
- * - eosService.eos.getTableRows("eosio", "eosio", "producers") -> 节点列表
- * - eosService.eos.getAccount(account_name) -> voter_info.producers (已投票节点), voter_info.staked
- *
- * 节点字段: owner, total_votes, producer_key, url, unpaid_blocks, last_claim_time, is_active
- *
- * 投票操作:
- * - 合约: eosio
- * - Action: voteproducer
- * - 数据: { voter, proxy: "", producers: [...] } 或 { voter, proxy: "代理账户", producers: [] }
- * - 最多可投 30 个节点
+ * - eos.getGlobalState() -> total_producer_vote_weight
+ * - eos.getProducers() -> 节点列表
+ * - eos.getAccount(account_name) -> voter_info.producers (已投票节点), voter_info.staked
  */
 
 // 配置: 推荐的投票代理人账户
 const RECOMMENDED_PROXY = 'rockrockrock'
 
-// 模拟全局数据 (来自 global 表)
-const globalData = {
-  total_producer_vote_weight: '1456789012345678901234',
-}
-
-// 模拟节点列表 (来自 producers 表)
-const mockProducers = [
-  { owner: 'fibosgenesis', total_votes: '123456789012345678', is_active: true, url: '' },
-  { owner: 'fibosbpnode1', total_votes: '112345678901234567', is_active: true, url: '' },
-  { owner: 'fibosoffical', total_votes: '109876543210987654', is_active: true, url: '' },
-  { owner: 'fibosnode888', total_votes: '98765432109876543', is_active: true, url: '' },
-  { owner: 'fibosisgreat', total_votes: '87654321098765432', is_active: true, url: '' },
-  { owner: 'fibosmainnet', total_votes: '76543210987654321', is_active: true, url: '' },
-  { owner: 'fibosworld11', total_votes: '65432109876543210', is_active: true, url: '' },
-  { owner: 'fiboschain11', total_votes: '54321098765432109', is_active: true, url: '' },
-  { owner: 'fibosbp11111', total_votes: '43210987654321098', is_active: true, url: '' },
-  { owner: 'fibosteam111', total_votes: '32109876543210987', is_active: true, url: '' },
-]
-
-// 模拟已投票记录 (来自 getAccount().voter_info.producers)
-const mockVotedProducers = ['fibosgenesis', 'fibosbpnode1', 'fibosoffical']
-
-// 模拟抵押量 (来自 voter_info.staked / 10000)
-const mockStaked = 500.0
+// 无效的公钥 (已注销节点)
+const INVALID_PRODUCER_KEY = 'FO1111111111111111111111111111111114T1Anm'
 
 // 计算得票率
 function getVotePercent(total_votes: string, total_weight: string): string {
@@ -58,26 +30,71 @@ function getVotePercent(total_votes: string, total_weight: string): string {
   return ((votes / weight) * 100).toFixed(2)
 }
 
+interface ProducerWithRank extends Producer {
+  rank: number
+}
+
 export default function VotingPage() {
+  // 数据状态
+  const [producers, setProducers] = useState<ProducerWithRank[]>([])
+  const [totalWeight, setTotalWeight] = useState<string>('0')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   // 搜索关键词
   const [keywords, setKeywords] = useState('')
 
-  // 已选节点 - 初始化时读取已投票记录
-  const [selectedProducers, setSelectedProducers] = useState<Set<string>>(
-    new Set(mockVotedProducers)
-  )
+  // 已选节点
+  const [selectedProducers, setSelectedProducers] = useState<Set<string>>(new Set())
 
-  // 模拟钱包连接状态
+  // 模拟钱包连接状态 (实际需要集成钱包)
   const [isConnected] = useState(false)
-  const accountName = isConnected ? 'myaccount123' : ''
+  const [staked] = useState(0)
+
+  // 获取数据
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // 并行获取全局状态和节点列表
+        const [globalState, producersData] = await Promise.all([
+          eosClient.getGlobalState(),
+          eosClient.getProducers(200),
+        ])
+
+        // 设置全局投票权重
+        setTotalWeight(globalState?.total_producer_vote_weight || '0')
+
+        // 过滤并排序节点
+        const activeProducers = producersData.rows
+          .filter(p => p.producer_key !== INVALID_PRODUCER_KEY)
+          .sort((a, b) => parseFloat(b.total_votes) - parseFloat(a.total_votes))
+          .map((p, index) => ({
+            ...p,
+            rank: index + 1,
+          }))
+
+        setProducers(activeProducers)
+      } catch (err) {
+        console.error('获取投票数据失败:', err)
+        setError('获取数据失败，请刷新重试')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   // 过滤节点列表
-  const filteredProducers = mockProducers.filter((producer) =>
+  const filteredProducers = producers.filter((producer) =>
     producer.owner.toLowerCase().includes(keywords.toLowerCase())
   )
 
   // 切换节点选中状态
-  const toggleProducer = (owner: string, isActive: boolean) => {
+  const toggleProducer = (owner: string, isActive: number) => {
     if (!isActive) {
       // 已注销节点不能选择
       return
@@ -98,7 +115,7 @@ export default function VotingPage() {
 
   // 全选前 21 个
   const selectTop21 = () => {
-    const top21 = mockProducers
+    const top21 = producers
       .filter((p) => p.is_active)
       .slice(0, 21)
       .map((p) => p.owner)
@@ -108,6 +125,30 @@ export default function VotingPage() {
   // 清空选择
   const clearSelection = () => {
     setSelectedProducers(new Set())
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-4" />
+        <p>加载节点数据...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
+        <AlertCircle className="w-12 h-12 mb-4 text-red-400" />
+        <p>{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+        >
+          刷新重试
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -128,11 +169,13 @@ export default function VotingPage() {
             </div>
             <span className="text-sm text-slate-500 dark:text-slate-400">出块节点</span>
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-white">21</div>
+          <div className="text-xl font-bold text-slate-900 dark:text-white">
+            {Math.min(producers.filter(p => p.is_active).length, 21)}
+          </div>
           <div className="text-sm text-slate-400 mt-1">活跃生产者</div>
         </div>
 
-        {/* My Staked - 来自 getAccount().voter_info.staked */}
+        {/* My Staked */}
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
@@ -141,7 +184,7 @@ export default function VotingPage() {
             <span className="text-sm text-slate-500 dark:text-slate-400">我的抵押</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
-            {isConnected ? `${mockStaked.toFixed(4)} FO` : '0 FO'}
+            {isConnected ? `${staked.toFixed(4)} FO` : '0 FO'}
           </div>
           <div className="text-sm text-slate-400 mt-1">用于投票的抵押量</div>
         </div>
@@ -229,7 +272,7 @@ export default function VotingPage() {
               </span>
             ))}
           </div>
-          {/* Vote Button - Inside Selected Producers */}
+          {/* Vote Button */}
           <div className="mt-4 pt-4 border-t border-purple-500/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <AlertCircle className="w-4 h-4" />
@@ -256,7 +299,12 @@ export default function VotingPage() {
         {/* Header with Search */}
         <div className="p-4 border-b border-slate-200/50 dark:border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">超级节点列表</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              超级节点列表
+              <span className="ml-2 text-sm font-normal text-slate-400">
+                共 {producers.length} 个
+              </span>
+            </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={selectTop21}
@@ -290,10 +338,10 @@ export default function VotingPage() {
 
         {/* Producers */}
         <div className="divide-y divide-slate-200/50 dark:divide-white/10">
-          {filteredProducers.map((producer, index) => {
-            const rank = index + 1
+          {filteredProducers.map((producer) => {
             const isChecked = selectedProducers.has(producer.owner)
-            const votePercent = getVotePercent(producer.total_votes, globalData.total_producer_vote_weight)
+            const votePercent = getVotePercent(producer.total_votes, totalWeight)
+            const isActive = producer.is_active === 1
 
             return (
               <div
@@ -304,7 +352,7 @@ export default function VotingPage() {
                   isChecked
                     ? 'bg-purple-500/5 hover:bg-purple-500/10'
                     : 'hover:bg-slate-50 dark:hover:bg-white/5',
-                  !producer.is_active && 'opacity-50 cursor-not-allowed'
+                  !isActive && 'opacity-50 cursor-not-allowed'
                 )}
               >
                 {/* Checkbox */}
@@ -321,14 +369,14 @@ export default function VotingPage() {
                   <div
                     className={cn(
                       'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs',
-                      rank <= 3
+                      producer.rank <= 3
                         ? 'bg-gradient-to-br from-purple-500 to-cyan-500 text-white'
-                        : rank <= 21
+                        : producer.rank <= 21
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                         : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                     )}
                   >
-                    {rank}
+                    {producer.rank}
                   </div>
                 </div>
 
@@ -365,9 +413,13 @@ export default function VotingPage() {
 
                 {/* Status */}
                 <div className="sm:col-span-1">
-                  {rank <= 21 ? (
+                  {producer.rank <= 21 && isActive ? (
                     <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                       出块
+                    </span>
+                  ) : !isActive ? (
+                    <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-500">
+                      注销
                     </span>
                   ) : (
                     <span className="text-xs px-2 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">

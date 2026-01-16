@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { Key, User, ArrowRight } from 'lucide-react'
+import * as eos from '@/lib/services/eos'
 
 /**
  * 公钥查询页面
  *
  * 数据来源 (参考老项目 eos.service.ts):
- * - eosService.eos.getKeyAccounts(publicKey) -> { account_names: string[] }
+ * - eos.getKeyAccounts(publicKey) -> { account_names: string[] }
  *
  * 该方法返回使用指定公钥的所有账户列表
  */
@@ -14,17 +15,20 @@ interface PageProps {
   params: Promise<{ key: string }>
 }
 
-// 模拟数据 - 来自 getKeyAccounts()
-const mockAccounts = [
-  'fibosaccount',
-  'testaccount1',
-  'myaccount123',
-]
-
 export default async function PublicKeyPage({ params }: PageProps) {
   const { key } = await params
   const decodedKey = decodeURIComponent(key)
-  const accounts = mockAccounts
+
+  let accounts: string[] = []
+  let error: string | null = null
+
+  try {
+    const result = await eos.getKeyAccounts(decodedKey)
+    accounts = result.account_names || []
+  } catch (err) {
+    console.error('获取公钥关联账户失败:', err)
+    error = '获取数据失败或公钥无效'
+  }
 
   return (
     <div className="space-y-6">
@@ -50,42 +54,54 @@ export default async function PublicKeyPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Related Accounts - 来自 getKeyAccounts() */}
-      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
-        <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-purple-500" />
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">关联账户</h2>
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
+          <div className="text-sm text-red-700 dark:text-red-300">
+            <p className="font-medium mb-1">查询失败</p>
+            <p className="text-red-600 dark:text-red-400">{error}</p>
           </div>
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            共 {accounts.length} 个
-          </span>
         </div>
+      )}
 
-        {accounts.length > 0 ? (
-          <div className="divide-y divide-slate-200/50 dark:divide-white/10">
-            {accounts.map((account) => (
-              <Link
-                key={account}
-                href={`/explorer/accounts/${account}`}
-                className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
-                    {account.charAt(0).toUpperCase()}
+      {/* Related Accounts */}
+      {!error && (
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
+          <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-purple-500" />
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">关联账户</h2>
+            </div>
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              共 {accounts.length} 个
+            </span>
+          </div>
+
+          {accounts.length > 0 ? (
+            <div className="divide-y divide-slate-200/50 dark:divide-white/10">
+              {accounts.map((account) => (
+                <Link
+                  key={account}
+                  href={`/explorer/accounts/${account}`}
+                  className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                      {account.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-mono text-slate-900 dark:text-white">{account}</span>
                   </div>
-                  <span className="font-mono text-slate-900 dark:text-white">{account}</span>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400" />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-400">
-            未找到使用此公钥的账户
-          </div>
-        )}
-      </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-slate-400">
+              未找到使用此公钥的账户
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Info */}
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">

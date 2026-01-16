@@ -55,6 +55,16 @@ export function formatBalance(balance: string): string {
 }
 
 /**
+ * 解析余额字符串为数字
+ * 例: "123.4567 FO" -> 123.4567
+ */
+export function parseBalance(balanceStr: string | undefined): number {
+  if (!balanceStr) return 0
+  const parts = balanceStr.split(' ')
+  return parseFloat(parts[0] || '0')
+}
+
+/**
  * 格式化日期时间
  */
 export function formatDateTime(date: string | Date): string {
@@ -87,4 +97,11 @@ export function formatRelativeTime(date: string | Date): string {
   if (hours > 0) return `${hours} 小时前`
   if (minutes > 0) return `${minutes} 分钟前`
   return `${seconds} 秒前`
+}
+
+/**
+ * 格式化公钥
+ */
+export function formatPublicKey(key: string): string {
+  return key || ''
 }

@@ -1,54 +1,62 @@
 import Link from 'next/link'
 import { Box, Clock, Hash, User, Layers, CheckCircle, AlertCircle } from 'lucide-react'
-
-/**
- * 区块详情页面
- *
- * 数据来源 (参考老项目 block/block.component.ts):
- * - eosService.eos.getBlock(id) -> 区块详情
- *   - block_num: 区块号
- *   - id: 区块哈希
- *   - timestamp: 时间戳
- *   - producer: 出块节点
- *   - previous: 上一个区块哈希
- *   - transaction_mroot: 交易默克尔根
- *   - action_mroot: Action 默克尔根
- *   - transactions: 交易列表 [{trx: {id, transaction: {actions}}, status}]
- *
- * - eosService.eos.getInfo() -> 链信息
- *   - last_irreversible_block_num: 不可逆区块号 (判断 pending 状态)
- *
- * 状态判断: block_num > last_irreversible_block_num ? "Pending" : "Irreversible"
- */
+import * as eos from '@/lib/services/eos'
+import type { Block } from '@/lib/services/types'
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
-// 模拟数据 - 实际数据来自 getBlock()
-const mockBlock = {
-  block_num: 123456789,
-  id: '0075bcd15abc123def456789abcdef123456789abcdef123456789abcdef1234',
-  timestamp: '2024-01-15T10:30:00.000',
-  producer: 'fibosgenesis',
-  previous: '0075bcd14abc123def456789abcdef123456789abcdef123456789abcdef1234',
-  transaction_mroot: '0000000000000000000000000000000000000000000000000000000000000000',
-  action_mroot: '0000000000000000000000000000000000000000000000000000000000000000',
-  transactions: [
-    { trx: { id: 'abc123...def456', transaction: { actions: [{}, {}] } }, status: 'executed' },
-    { trx: { id: 'xyz789...uvw012', transaction: { actions: [{}] } }, status: 'executed' },
-  ],
-}
-
-// 模拟链信息 - 来自 getInfo()
-const mockInfo = {
-  last_irreversible_block_num: 123456750,
-}
-
 export default async function BlockPage({ params }: PageProps) {
   const { id } = await params
-  const block = mockBlock
-  const isPending = block.block_num > mockInfo.last_irreversible_block_num
+
+  let block: Block | null = null
+  let chainInfo: { last_irreversible_block_num: number } | null = null
+  let error: string | null = null
+
+  try {
+    // 并行获取区块和链信息
+    const [blockData, info] = await Promise.all([
+      eos.getBlock(id),
+      eos.getInfo(),
+    ])
+    block = blockData
+    chainInfo = info
+  } catch (err) {
+    console.error('获取区块数据失败:', err)
+    error = '获取区块数据失败'
+  }
+
+  if (error || !block) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
+        <Box className="w-12 h-12 mb-4 text-slate-300" />
+        <p>{error || '区块不存在'}</p>
+        <Link
+          href="/"
+          className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+        >
+          返回首页
+        </Link>
+      </div>
+    )
+  }
+
+  const isPending = chainInfo
+    ? block.block_num > chainInfo.last_irreversible_block_num
+    : false
+
+  // 格式化时间
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp + 'Z').toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -59,7 +67,7 @@ export default async function BlockPage({ params }: PageProps) {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">区块详情</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Block #{id}</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Block #{block.block_num.toLocaleString()}</p>
         </div>
       </div>
 
@@ -96,7 +104,7 @@ export default async function BlockPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Block ID - 来自 getBlock().id */}
+          {/* Block ID */}
           <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400 shrink-0">
               <Hash className="w-4 h-4" />
@@ -107,18 +115,18 @@ export default async function BlockPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Timestamp - 来自 getBlock().timestamp */}
+          {/* Timestamp */}
           <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400">
               <Clock className="w-4 h-4" />
               时间戳
             </div>
             <div className="text-slate-900 dark:text-white">
-              {block.timestamp}
+              {formatTime(block.timestamp)}
             </div>
           </div>
 
-          {/* Producer - 来自 getBlock().producer */}
+          {/* Producer */}
           <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400">
               <User className="w-4 h-4" />
@@ -132,7 +140,7 @@ export default async function BlockPage({ params }: PageProps) {
             </Link>
           </div>
 
-          {/* Previous Block - 来自 getBlock().previous */}
+          {/* Previous Block */}
           <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400 shrink-0">
               <Layers className="w-4 h-4" />
@@ -148,7 +156,7 @@ export default async function BlockPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Transactions - 来自 getBlock().transactions */}
+      {/* Transactions */}
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
         <div className="p-4 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -164,38 +172,38 @@ export default async function BlockPage({ params }: PageProps) {
             {/* Table Header */}
             <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-500 dark:text-slate-400">
               <div className="col-span-1">#</div>
-              <div className="col-span-7">交易 ID</div>
-              <div className="col-span-2">Actions</div>
+              <div className="col-span-9">交易 ID</div>
               <div className="col-span-2">状态</div>
             </div>
 
             <div className="divide-y divide-slate-200/50 dark:divide-white/10">
-              {block.transactions.map((tx, index) => (
-                <Link
-                  key={index}
-                  href={`/explorer/transactions/${tx.trx.id}`}
-                  className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors items-center"
-                >
-                  {/* Index */}
-                  <div className="sm:col-span-1 text-xs text-slate-400">
-                    {index + 1}
-                  </div>
-                  {/* TX ID */}
-                  <div className="sm:col-span-7 font-mono text-sm text-purple-600 dark:text-cyan-400 truncate">
-                    {tx.trx.id}
-                  </div>
-                  {/* Actions Count */}
-                  <div className="sm:col-span-2 text-xs text-slate-600 dark:text-slate-300">
-                    {tx.trx.transaction.actions.length} 个
-                  </div>
-                  {/* Status */}
-                  <div className="sm:col-span-2">
-                    <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      {tx.status}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              {block.transactions.map((tx, index) => {
+                // 处理交易数据：可能是字符串（tx id）或对象
+                const txId = typeof tx.trx === 'string' ? tx.trx : (tx.trx as { id: string })?.id || '-'
+
+                return (
+                  <Link
+                    key={index}
+                    href={`/explorer/transactions/${txId}`}
+                    className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors items-center"
+                  >
+                    {/* Index */}
+                    <div className="sm:col-span-1 text-xs text-slate-400">
+                      {index + 1}
+                    </div>
+                    {/* TX ID */}
+                    <div className="sm:col-span-9 font-mono text-sm text-purple-600 dark:text-cyan-400 truncate">
+                      {txId}
+                    </div>
+                    {/* Status */}
+                    <div className="sm:col-span-2">
+                      <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        {tx.status}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </>
         ) : (
@@ -205,7 +213,7 @@ export default async function BlockPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Raw Data - 来自 getBlock() 原始返回 */}
+      {/* Merkle Roots */}
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
         <div className="p-5 border-b border-slate-200/50 dark:border-white/10">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Merkle Roots</h2>
