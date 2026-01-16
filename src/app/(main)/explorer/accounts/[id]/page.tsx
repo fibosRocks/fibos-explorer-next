@@ -5,6 +5,7 @@ import type { Account } from '@/lib/services/types'
 import { Collapsible } from '@/components/ui/collapsible'
 import { AccountTraces } from '@/components/features/account-traces'
 import { ProducerVoters } from '@/components/features/producer-voters'
+import { ProxiedAccounts } from '@/components/features/proxied-accounts'
 
 import { formatBytes, formatTime, formatPercent, formatBalance, formatPublicKey } from '@/lib/utils/format'
 
@@ -80,6 +81,9 @@ export default async function AccountPage({ params }: PageProps) {
   // 投票信息
   const votedProducers = account.voter_info?.producers || []
   const proxy = account.voter_info?.proxy || ''
+
+  // 代理信息
+  const isProxy = account.voter_info?.is_proxy === 1
 
   return (
     <div className="space-y-6">
@@ -250,6 +254,9 @@ export default async function AccountPage({ params }: PageProps) {
 
       {/* Producer Voters Info (If account is a producer) */}
       <ProducerVoters accountName={id} />
+
+      {/* Proxied Accounts (If account is a proxy) */}
+      <ProxiedAccounts accountName={id} isProxy={isProxy} />
 
       {/* Tokens - Collapsible with Card Grid */}
       {balances.length > 0 && (

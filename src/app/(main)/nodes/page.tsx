@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Monitor, HardDrive, CheckCircle, Clock, Loader2, Zap } from 'lucide-react'
 import * as eosClient from '@/lib/services/eos-client'
+import * as apiClient from '@/lib/services/api-client'
 import type { ChainInfo, Producer, BpStatus } from '@/lib/services/types'
 import { cn } from '@/lib/utils'
 
@@ -82,7 +83,7 @@ export default function NodesPage() {
   // 2. 获取 BP 状态（较慢，补充信息，不阻塞）
   const fetchBpStatus = useCallback(async () => {
     try {
-      const bpStatusResult = await eosClient.getBpStatus()
+      const bpStatusResult = await apiClient.getBpStatus()
       const map = new Map<string, BpStatus>()
       bpStatusResult.rows2?.forEach((bp) => {
         map.set(bp.bpname, bp)

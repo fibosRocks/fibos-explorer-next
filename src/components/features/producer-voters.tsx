@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Vote, ChevronDown, Loader2, User, Users } from 'lucide-react'
 import { Collapsible } from '@/components/ui/collapsible'
-import * as eos from '@/lib/services/eos-client'
+import * as apiClient from '@/lib/services/api-client'
 import type { ProducerVoter } from '@/lib/services/types'
 import { cn } from '@/lib/utils'
 
@@ -25,12 +25,12 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
     async function checkProducer() {
       setLoading(true)
       try {
-        const votes = await eos.getProducerVotes(accountName)
+        const votes = await apiClient.getProducerVotes(accountName)
         setTotalVotes(votes)
 
         if (votes > 0) {
           // It is a producer, fetch initial voters (page 0)
-          const initialVoters = await eos.getProducerVoters(accountName, 0)
+          const initialVoters = await apiClient.getProducerVoters(accountName, 0)
 
           // Sort by vote weight descending
           const sortedVoters = [...initialVoters].sort((a, b) =>
@@ -56,7 +56,7 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
     setLoadingMore(true)
     try {
       const nextPage = page + 1
-      const newVoters = await eos.getProducerVoters(accountName, nextPage)
+      const newVoters = await apiClient.getProducerVoters(accountName, nextPage)
 
       if (newVoters.length > 0) {
         setVoters(prev => {

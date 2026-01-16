@@ -2,13 +2,15 @@
  * EOS RPC 服务 - 客户端版本
  * 通过 /api/rpc 代理调用，解决 CORS 问题
  * 用于客户端组件 ('use client')
+ *
+ * 注意：此文件只包含 EOS 节点 RPC 调用
+ * 后端 API 调用请使用 api-client.ts
  */
 
 import type {
   ChainInfo,
   Producer,
   ActionsResponse,
-  ProducerVoter,
 } from './types'
 
 /**
@@ -33,6 +35,7 @@ async function rpcRequest<T>(path: string, data?: unknown): Promise<T> {
 
 /**
  * 获取账户操作历史
+ * RPC: /v1/history/get_actions
  */
 export async function getActions(
   accountName: string,
@@ -48,6 +51,7 @@ export async function getActions(
 
 /**
  * 获取区块链信息
+ * RPC: /v1/chain/get_info
  */
 export async function getInfo(): Promise<ChainInfo> {
   return rpcRequest<ChainInfo>('/v1/chain/get_info')
@@ -55,6 +59,7 @@ export async function getInfo(): Promise<ChainInfo> {
 
 /**
  * 获取生产者列表
+ * RPC: /v1/chain/get_producers
  */
 export async function getProducers(
   limit = 200,
@@ -69,6 +74,7 @@ export async function getProducers(
 
 /**
  * 查询合约表数据
+ * RPC: /v1/chain/get_table_rows
  */
 export async function getTableRows<T = unknown>(options: {
   code: string
@@ -90,6 +96,7 @@ export async function getTableRows<T = unknown>(options: {
 
 /**
  * 获取全局投票状态
+ * 使用 getTableRows 查询 eosio global 表
  */
 export async function getGlobalState() {
   const result = await getTableRows<{
@@ -104,44 +111,4 @@ export async function getGlobalState() {
     limit: 1,
   })
   return result.rows[0]
-}
-
-// ==================== 外部 API ====================
-
-import type { BpStatusResponse } from './types'
-
-/**
- * 获取 BP 节点状态 (通过代理)
- */
-export async function getBpStatus(): Promise<BpStatusResponse> {
-  const response = await fetch('/api/external/bp-status')
-
-  if (!response.ok) {
-    throw new Error(`BP Status API Error: ${response.status}`)
-  }
-
-  return response.json()
-}
-
-/**
- * 获取节点总票数
- */
-export async function getProducerVotes(producer: string): Promise<number> {
-  const response = await fetch(`/api/explorer?path=/vote&producer=${producer}`)
-  if (!response.ok) return 0
-  const data = await response.json()
-  // data might be { data: "123" } if route.ts parsed text, or just number
-  if (typeof data === 'number') return data
-  if (data && typeof data.data === 'string') return parseFloat(data.data) || 0
-  return 0
-}
-
-/**
- * 获取节点的投票者列表
- */
-export async function getProducerVoters(producer: string, page = 0): Promise<ProducerVoter[]> {
-  const response = await fetch(`/api/explorer?path=/voter&producer=${producer}&page=${page}`)
-  if (!response.ok) return []
-  const data = await response.json()
-  return Array.isArray(data) ? data : []
 }

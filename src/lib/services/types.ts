@@ -392,3 +392,12 @@ export interface ProducerVoter {
   last_vote_weight: string
   is_proxy: number
 }
+
+/**
+ * 被代理人信息 (/proxy)
+ */
+export interface ProxiedAccount {
+  owner: string
+  staked: number
+  last_vote_weight: string
+}
