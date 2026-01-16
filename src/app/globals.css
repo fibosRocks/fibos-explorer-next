@@ -47,6 +47,10 @@
   --ring: 224.3 76.3% 48%;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));

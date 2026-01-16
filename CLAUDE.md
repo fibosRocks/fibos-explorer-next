@@ -85,3 +85,10 @@ src/
 - Use `bun install` instead of `npm install`
 - Use `bun run <script>` instead of `npm run <script>`
 - Bun automatically loads .env
+
+## Development Workflow
+
+**编辑文件时的流程**：
+1. 编辑前：先停止 `bun dev`（如果正在运行）
+2. 执行编辑操作
+3. 编辑后：重新启动 `bun dev`

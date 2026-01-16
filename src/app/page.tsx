@@ -37,7 +37,7 @@ export default function HomePage() {
       <div className="relative z-10 w-full max-w-lg space-y-10 text-center">
         <div className="space-y-4">
           <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-gradient-to-r from-slate-700 via-purple-700 to-cyan-700 dark:from-white dark:via-purple-200 dark:to-cyan-200 bg-clip-text text-transparent drop-shadow-2xl">
-            FIBOS
+            FIBOS ROCKS
           </h1>
           <p className="text-lg text-slate-500 dark:text-slate-400 font-light tracking-widest uppercase">
             Blockchain Explorer

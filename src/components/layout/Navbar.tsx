@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -53,8 +54,15 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
           href="/"
           className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white hover:opacity-80 transition-opacity"
         >
+          <Image
+            src="/logo.png"
+            alt="FIBOS ROCKS"
+            width={32}
+            height={32}
+            className="w-8 h-8"
+          />
           <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
-            FIBOS
+            FIBOS ROCKS
           </span>
         </Link>
 
@@ -80,15 +88,14 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
           })}
         </nav>
 
-        {/* Search */}
-        {showSearch && (
-          <div className="hidden lg:block flex-1 max-w-md">
-            <NavbarSearch />
-          </div>
-        )}
-
-        {/* Spacer - push right side to the end */}
-        <div className="flex-1" />
+        {/* Center area - Search or Spacer */}
+        <div className="flex-1 flex justify-center">
+          {showSearch && (
+            <div className="hidden lg:block w-full max-w-md">
+              <NavbarSearch />
+            </div>
+          )}
+        </div>
 
         {/* Right side */}
         <div className="flex items-center gap-2">

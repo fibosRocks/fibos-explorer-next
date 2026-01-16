@@ -1,71 +1,101 @@
 import Link from 'next/link'
-import { ArrowLeft, Key, User, Copy } from 'lucide-react'
+import { Key, User, ArrowRight } from 'lucide-react'
+
+/**
+ * 公钥查询页面
+ *
+ * 数据来源 (参考老项目 eos.service.ts):
+ * - eosService.eos.getKeyAccounts(publicKey) -> { account_names: string[] }
+ *
+ * 该方法返回使用指定公钥的所有账户列表
+ */
 
 interface PageProps {
   params: Promise<{ key: string }>
 }
 
+// 模拟数据 - 来自 getKeyAccounts()
+const mockAccounts = [
+  'fibosaccount',
+  'testaccount1',
+  'myaccount123',
+]
+
 export default async function PublicKeyPage({ params }: PageProps) {
   const { key } = await params
+  const decodedKey = decodeURIComponent(key)
+  const accounts = mockAccounts
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="space-y-6">
       {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>返回首页</span>
-          </Link>
-          <h1 className="text-xl font-semibold text-white">FIBOS Explorer</h1>
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+          <Key className="w-7 h-7 text-amber-500" />
         </div>
-      </header>
-
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Title */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
-            <Key className="w-7 h-7 text-amber-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">公钥查询</h2>
-            <p className="text-white/50 text-sm mt-1">Public Key Lookup</p>
-          </div>
-        </div>
-
-        {/* Key Card */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <Key className="w-5 h-5 text-amber-400 mt-1 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-white/50 text-sm mb-2">公钥</p>
-              <div className="flex items-center gap-2">
-                <p className="text-white font-mono text-sm break-all">{decodeURIComponent(key)}</p>
-                <button
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors shrink-0"
-                  title="复制公钥"
-                >
-                  <Copy className="w-4 h-4 text-white/70" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Related Accounts */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <User className="w-5 h-5 text-purple-400" />
-            <span className="text-white font-medium">关联账户</span>
-          </div>
-          <p className="text-amber-400 text-sm">功能开发中...</p>
-          <p className="text-white/50 text-sm mt-2">即将显示使用此公钥的所有账户列表</p>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">公钥查询</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">查找使用此公钥的账户</p>
         </div>
       </div>
-    </main>
+
+      {/* Public Key Card */}
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Key className="w-4 h-4 text-amber-500" />
+          <span className="text-sm text-slate-500 dark:text-slate-400">公钥</span>
+        </div>
+        <div className="font-mono text-sm text-slate-900 dark:text-white break-all bg-slate-100 dark:bg-slate-800 p-4 rounded-xl">
+          {decodedKey}
+        </div>
+      </div>
+
+      {/* Related Accounts - 来自 getKeyAccounts() */}
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
+        <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5 text-purple-500" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">关联账户</h2>
+          </div>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            共 {accounts.length} 个
+          </span>
+        </div>
+
+        {accounts.length > 0 ? (
+          <div className="divide-y divide-slate-200/50 dark:divide-white/10">
+            {accounts.map((account) => (
+              <Link
+                key={account}
+                href={`/explorer/accounts/${account}`}
+                className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                    {account.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-mono text-slate-900 dark:text-white">{account}</span>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-400" />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center text-slate-400">
+            未找到使用此公钥的账户
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+        <div className="text-sm text-blue-700 dark:text-blue-300">
+          <p className="font-medium mb-1">关于公钥查询</p>
+          <p className="text-blue-600 dark:text-blue-400">
+            通过公钥可以查找所有使用该公钥的 FIBOS 账户。一个公钥可以对应多个账户。
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }

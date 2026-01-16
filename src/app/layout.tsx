@@ -6,8 +6,11 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FIBOS Explorer',
-  description: 'FIBOS Blockchain Explorer - 区块链浏览器',
+  title: 'FIBOS ROCKS',
+  description: 'FIBOS ROCKS - 区块链浏览器',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
