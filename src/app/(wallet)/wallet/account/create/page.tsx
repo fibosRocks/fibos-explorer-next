@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, Key, CheckCircle, AlertCircle, Info, Wallet } from 'lucide-react'
+import { UserPlus, Key, CheckCircle, AlertCircle, Info, Wallet, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useWalletStore } from '@/stores/walletStore'
+import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 
 /**
  * 创建账户页面
@@ -20,17 +22,73 @@ import { cn } from '@/lib/utils'
  */
 
 export default function CreateAccountPage() {
+  const { connected, account, connect, transact, getPermission } = useWalletStore()
+
   const [accountName, setAccountName] = useState('')
   const [ownerKey, setOwnerKey] = useState('')
   const [activeKey, setActiveKey] = useState('')
+  const [ramBytes, setRamBytes] = useState('4096')
+  const [cpuAmount, setCpuAmount] = useState('0.1000')
+  const [netAmount, setNetAmount] = useState('0.1000')
+
   const [isValidName, setIsValidName] = useState<boolean | null>(null)
   const [isValidOwnerKey, setIsValidOwnerKey] = useState<boolean | null>(null)
   const [isValidActiveKey, setIsValidActiveKey] = useState<boolean | null>(null)
+
+  const [checkingName, setCheckingName] = useState(false)
+  const [nameAvailable, setNameAvailable] = useState<boolean | null>(null)
+
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<{ message: string; txId?: string } | null>(null)
 
   // 账户名验证: 12位小写字母(a-z)和数字(1-5)
   const validateAccountName = (name: string) => {
     const regex = /^[a-z1-5]{12}$/
     return regex.test(name)
+  }
+
+  // 检查账户是否存在
+  const checkAccountAvailability = async (name: string) => {
+    if (!validateAccountName(name)) return
+
+    setCheckingName(true)
+    setNameAvailable(null)
+
+    try {
+      const response = await fetch('/api/rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: '/v1/chain/get_account',
+          data: { account_name: name },
+        }),
+      })
+
+      // 如果获取到了账户信息，说明账户已存在（不可用）
+      if (response.ok) {
+        setNameAvailable(false)
+      } else {
+        // 如果报错（通常是 500 unknown key），说明账户不存在（可用）
+        setNameAvailable(true)
+      }
+    } catch (e) {
+      console.error('Check account error:', e)
+    } finally {
+      setCheckingName(false)
+    }
+  }
+
+  // 随机生成账户名
+  const generateRandomName = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz12345'
+    let result = ''
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setAccountName(result)
+    setIsValidName(true)
+    checkAccountAvailability(result)
   }
 
   // 公钥验证: FIBOS 公钥以 FO 开头，长度约 53 字符
@@ -43,10 +101,16 @@ export default function CreateAccountPage() {
   const handleNameChange = (value: string) => {
     const lowered = value.toLowerCase()
     setAccountName(lowered)
+    setNameAvailable(null) // 重置可用性状态
     if (lowered.length === 0) {
       setIsValidName(null)
     } else if (lowered.length === 12) {
-      setIsValidName(validateAccountName(lowered))
+      const valid = validateAccountName(lowered)
+      setIsValidName(valid)
+      if (valid) {
+        // 如果输入完整且格式正确，自动检查可用性
+        checkAccountAvailability(lowered)
+      }
     } else {
       setIsValidName(false)
     }
@@ -70,7 +134,88 @@ export default function CreateAccountPage() {
     }
   }
 
-  const isFormValid = isValidName && isValidOwnerKey && isValidActiveKey
+  const handleCreateAccount = async () => {
+    if (!connected || !account) {
+        connect()
+        return
+    }
+
+    const permission = getPermission()
+    if (!permission) {
+        setError('无法获取权限')
+        return
+    }
+
+    setCreating(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+        const result = await transact([
+            {
+              account: 'eosio',
+              name: 'newaccount',
+              authorization: [permission],
+              data: {
+                creator: account.name,
+                name: accountName,
+                owner: {
+                  threshold: 1,
+                  keys: [{ key: ownerKey, weight: 1 }],
+                  accounts: [],
+                  waits: []
+                },
+                active: {
+                  threshold: 1,
+                  keys: [{ key: activeKey, weight: 1 }],
+                  accounts: [],
+                  waits: []
+                },
+              },
+            },
+            {
+              account: 'eosio',
+              name: 'buyrambytes',
+              authorization: [permission],
+              data: {
+                payer: account.name,
+                receiver: accountName,
+                bytes: parseInt(ramBytes),
+              },
+            },
+            {
+              account: 'eosio',
+              name: 'delegatebw',
+              authorization: [permission],
+              data: {
+                from: account.name,
+                receiver: accountName,
+                stake_net_quantity: `${parseFloat(netAmount).toFixed(4)} FO`,
+                stake_cpu_quantity: `${parseFloat(cpuAmount).toFixed(4)} FO`,
+                transfer: 1,
+              },
+            },
+        ])
+
+        setSuccess({
+            message: `账户 ${accountName} 创建成功！`,
+            txId: result.transaction_id
+        })
+        setAccountName('')
+        setOwnerKey('')
+        setActiveKey('')
+        setIsValidName(null)
+        setIsValidOwnerKey(null)
+        setIsValidActiveKey(null)
+
+    } catch (err) {
+        setError(err instanceof Error ? err.message : '创建账户失败')
+    } finally {
+        setCreating(false)
+    }
+  }
+
+  const isFormValid = isValidName && isValidOwnerKey && isValidActiveKey && connected
 
   return (
     <div className="space-y-6">
@@ -91,7 +236,13 @@ export default function CreateAccountPage() {
                 <Wallet className="w-5 h-5 text-purple-500" />
               </div>
               <div className="flex-1">
-                <div className="text-slate-400 text-sm">未连接钱包</div>
+                {connected && account ? (
+                    <div className="text-slate-900 dark:text-white font-mono">{account.name}</div>
+                ) : (
+                    <button onClick={() => connect()} className="text-purple-600 text-sm hover:underline">
+                        点击连接钱包
+                    </button>
+                )}
               </div>
             </div>
             <p className="text-xs text-slate-400 mt-2">创建账户需要消耗创建者的 FO 代币</p>
@@ -113,23 +264,34 @@ export default function CreateAccountPage() {
                   placeholder="输入12位账户名"
                   maxLength={12}
                   className={cn(
-                    'w-full h-12 px-4 pr-12 bg-slate-100 dark:bg-slate-800 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all',
+                    'w-full h-12 px-4 pr-32 bg-slate-100 dark:bg-slate-800 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all',
                     isValidName === true && 'border-emerald-500 focus:ring-emerald-500/50',
                     isValidName === false && 'border-red-500 focus:ring-red-500/50',
                     isValidName === null && 'border-slate-200 dark:border-slate-700 focus:ring-purple-500/50 focus:border-purple-500'
                   )}
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isValidName === true && <CheckCircle className="w-5 h-5 text-emerald-500" />}
-                  {isValidName === false && <AlertCircle className="w-5 h-5 text-red-500" />}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {checkingName && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                  <button
+                    onClick={generateRandomName}
+                    className="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded flex items-center gap-1 transition-colors"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    随机
+                  </button>
                 </div>
               </div>
               <div className="flex justify-between text-xs mt-2">
                 <span className={cn(
-                  isValidName === false ? 'text-red-500' : 'text-slate-400'
+                  isValidName === false || nameAvailable === false ? 'text-red-500' :
+                  nameAvailable === true ? 'text-emerald-500' : 'text-slate-400'
                 )}>
                   {isValidName === false
                     ? '账户名必须是12位，仅包含小写字母 a-z 和数字 1-5'
+                    : nameAvailable === false
+                    ? '该账户名已被注册'
+                    : nameAvailable === true
+                    ? '该账户名可用'
                     : '12位小写字母(a-z)和数字(1-5)的组合'}
                 </span>
                 <span className="text-slate-400">{accountName.length}/12</span>
@@ -214,8 +376,9 @@ export default function CreateAccountPage() {
                 </label>
                 <input
                   type="text"
+                  value={ramBytes}
+                  onChange={(e) => setRamBytes(e.target.value)}
                   placeholder="4096"
-                  defaultValue="4096"
                   className="w-full h-10 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                 />
               </div>
@@ -227,8 +390,9 @@ export default function CreateAccountPage() {
                 </label>
                 <input
                   type="text"
+                  value={cpuAmount}
+                  onChange={(e) => setCpuAmount(e.target.value)}
                   placeholder="0.1000"
-                  defaultValue="0.1000"
                   className="w-full h-10 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                 />
               </div>
@@ -240,31 +404,47 @@ export default function CreateAccountPage() {
                 </label>
                 <input
                   type="text"
+                  value={netAmount}
+                  onChange={(e) => setNetAmount(e.target.value)}
                   placeholder="0.1000"
-                  defaultValue="0.1000"
                   className="w-full h-10 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                 />
               </div>
             </div>
 
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              预计费用: <span className="font-medium text-slate-900 dark:text-white">~0.2500 FO</span>
+              预计费用: <span className="font-medium text-slate-900 dark:text-white">~{(parseFloat(cpuAmount) + parseFloat(netAmount) + 0.05).toFixed(4)} FO</span>
               <span className="text-xs text-slate-400 ml-2">(RAM + CPU + NET 抵押)</span>
             </div>
           </div>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <TransactionSuccess
+                message={success.message}
+                txId={success.txId}
+                className="mb-6"
+            />
+          )}
+
           {/* Create Button */}
           <button
-            disabled={!isFormValid}
+            onClick={handleCreateAccount}
+            disabled={!isFormValid || creating}
             className={cn(
               'w-full h-12 rounded-xl font-medium flex items-center justify-center gap-2 transition-all',
-              isFormValid
+              isFormValid && !creating
                 ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:opacity-90'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
             )}
           >
-            <UserPlus className="w-4 h-4" />
-            创建账户
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+            {creating ? '创建中...' : '创建账户'}
           </button>
         </div>
 
@@ -277,8 +457,31 @@ export default function CreateAccountPage() {
               <div>
                 <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">如何获取公钥</h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  使用 FIBOS 钱包（如 FO 钱包、Ironman）生成密钥对，将公钥粘贴到此处。私钥请妥善保管，切勿泄露。
+                  跳转工具网站生成：
+                  <a
+                    href="https://eosio-key.github.io/eos-key"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block mt-1 underline font-mono hover:text-blue-800 dark:hover:text-blue-200"
+                  >
+                    https://eosio-key.github.io/eos-key
+                  </a>
                 </p>
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-sm font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    重要提示：请务必保管好您的私钥！
+                  </p>
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 leading-relaxed">
+                    私钥是您账户资金安全的唯一凭证。
+                    <br />
+                    • <strong>一旦丢失，无法找回</strong>，您将永久失去账户控制权。
+                    <br />
+                    • <strong>一旦泄露，资产将不保</strong>，任何人拿到私钥都能转移您的资产。
+                    <br />
+                    请务必<strong>离线备份</strong>（如抄写在纸上），切勿截图、拍照或通过网络发送给任何人。
+                  </p>
+                </div>
               </div>
             </div>
           </div>

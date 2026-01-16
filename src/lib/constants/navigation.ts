@@ -6,6 +6,8 @@ import {
   Home,
   Monitor,
   Wrench,
+  Code,
+  Shield,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -20,6 +22,8 @@ export const walletNavConfig: NavItem[] = [
   { label: '转账', href: '/wallet/transfer', icon: Send },
   { label: '资源管理', href: '/wallet/resources', icon: Cpu },
   { label: '创建账户', href: '/wallet/account/create', icon: UserPlus },
+  { label: '合约调用', href: '/wallet/contract', icon: Code },
+  { label: '多重签名', href: '/wallet/multisig', icon: Shield },
 ]
 
 export const mobileNavConfig: NavItem[] = [
