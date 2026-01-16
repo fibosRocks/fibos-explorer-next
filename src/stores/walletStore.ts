@@ -8,6 +8,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Account } from '@/lib/services/types'
 import { environment, networkConfig } from '@/lib/config/environment'
+import * as Fibos from 'eosjs-classic-fibos';
 
 // ==================== 类型定义 ====================
 
@@ -99,8 +100,8 @@ declare global {
 interface IronmanWallet {
   getIdentity: (options: { accounts: NetworkConfig[] }) => Promise<{ accounts: WalletAccount[] }>
   forgetIdentity: () => Promise<void>
-  fibos: (network: NetworkConfig, eosjs: unknown, options?: unknown) => FibosInterface
-  eos?: (network: NetworkConfig, eosjs: unknown, options?: unknown) => FibosInterface
+  fibos: (network: NetworkConfig, eosjs: unknown, options?: unknown, protocol?: string) => FibosInterface
+  eos?: (network: NetworkConfig, eosjs: unknown, options?: unknown, protocol?: string) => FibosInterface
 }
 
 interface ScatterWallet {
@@ -405,8 +406,25 @@ export const useWalletStore = create<WalletState>()(
           // Scatter 使用其自己的 eos 接口
           fibos = window.scatter.eos(networkConfig, null as unknown, { expireInSeconds: 60 })
         } else if (wallet.fibos) {
-          // FIBOS 插件
-          fibos = wallet.fibos(networkConfig, null as unknown, { expireInSeconds: 60 })
+          console.log('[Wallet] Using wallet.fibos')
+          // FIBOS 插件需要完整的 protocol 字符串 (http/https)
+          const config = {
+            ...networkConfig,
+            protocol: networkConfig.protocol || 'https'
+          }
+
+          // 确保 options 包含 chainId
+          // 参考老项目：public eosOptions = { broadcast: true, sign: true, chainId: environment.chainId }
+          // 注意：不要添加 expireInSeconds，这可能导致与老项目行为不一致
+          const options = {
+            broadcast: true,
+            sign: true,
+            chainId: config.chainId
+          }
+
+          // @ts-ignore - Fibos 类型定义可能不匹配
+          // 参考老项目：window["eosiowallet"][pluginTag](this.httpNetwork, this.JSSDK, this.eosOptions, this.httpNetwork.protocol);
+          fibos = wallet.fibos(config, Fibos, options, config.protocol)
         } else if (wallet.eos) {
           // 其他 EOS 兼容钱包
           fibos = wallet.eos(networkConfig, null as unknown, { expireInSeconds: 60 })
