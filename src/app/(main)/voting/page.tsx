@@ -6,6 +6,7 @@ import { Vote, Users, TrendingUp, Search, CheckSquare, Square, AlertCircle, User
 import { cn } from '@/lib/utils'
 import * as eosClient from '@/lib/services/eos-client'
 import type { Producer } from '@/lib/services/types'
+import { useWalletStore } from '@/stores/walletStore'
 
 /**
  * 投票页面
@@ -35,6 +36,9 @@ interface ProducerWithRank extends Producer {
 }
 
 export default function VotingPage() {
+  // 钱包状态
+  const { connected, account, accountInfo, accountStatus, connect, connecting, transact, getPermission } = useWalletStore()
+
   // 数据状态
   const [producers, setProducers] = useState<ProducerWithRank[]>([])
   const [totalWeight, setTotalWeight] = useState<string>('0')
@@ -47,9 +51,13 @@ export default function VotingPage() {
   // 已选节点
   const [selectedProducers, setSelectedProducers] = useState<Set<string>>(new Set())
 
-  // 模拟钱包连接状态 (实际需要集成钱包)
-  const [isConnected] = useState(false)
-  const [staked] = useState(0)
+  // 投票中状态
+  const [voting, setVoting] = useState(false)
+  const [voteSuccess, setVoteSuccess] = useState<string | null>(null)
+  const [voteError, setVoteError] = useState<string | null>(null)
+
+  // 计算抵押数量
+  const staked = accountStatus?.staked || 0
 
   // 获取数据
   useEffect(() => {
@@ -88,6 +96,13 @@ export default function VotingPage() {
     fetchData()
   }, [])
 
+  // 当钱包连接后，加载已投票节点
+  useEffect(() => {
+    if (connected && accountInfo?.voter_info?.producers) {
+      setSelectedProducers(new Set(accountInfo.voter_info.producers))
+    }
+  }, [connected, accountInfo])
+
   // 过滤节点列表
   const filteredProducers = producers.filter((producer) =>
     producer.owner.toLowerCase().includes(keywords.toLowerCase())
@@ -125,6 +140,88 @@ export default function VotingPage() {
   // 清空选择
   const clearSelection = () => {
     setSelectedProducers(new Set())
+  }
+
+  // 执行投票
+  const handleVote = async () => {
+    if (!connected || !account) {
+      setVoteError('请先连接钱包')
+      return
+    }
+
+    if (selectedProducers.size === 0) {
+      setVoteError('请至少选择一个节点')
+      return
+    }
+
+    const permission = getPermission()
+    if (!permission) {
+      setVoteError('无法获取账户权限')
+      return
+    }
+
+    setVoting(true)
+    setVoteError(null)
+    setVoteSuccess(null)
+
+    try {
+      // 节点名需要按字母顺序排序
+      const sortedProducers = Array.from(selectedProducers).sort()
+
+      const result = await transact([{
+        account: 'eosio',
+        name: 'voteproducer',
+        authorization: [permission],
+        data: {
+          voter: account.name,
+          proxy: '',
+          producers: sortedProducers,
+        },
+      }])
+
+      setVoteSuccess(`投票成功！交易ID: ${result.transaction_id.substring(0, 16)}...`)
+    } catch (err) {
+      setVoteError(err instanceof Error ? err.message : '投票失败')
+    } finally {
+      setVoting(false)
+    }
+  }
+
+  // 设置投票代理
+  const handleSetProxy = async () => {
+    if (!connected || !account) {
+      connect()
+      return
+    }
+
+    const permission = getPermission()
+    if (!permission) {
+      setVoteError('无法获取账户权限')
+      return
+    }
+
+    setVoting(true)
+    setVoteError(null)
+    setVoteSuccess(null)
+
+    try {
+      const result = await transact([{
+        account: 'eosio',
+        name: 'voteproducer',
+        authorization: [permission],
+        data: {
+          voter: account.name,
+          proxy: RECOMMENDED_PROXY,
+          producers: [],
+        },
+      }])
+
+      setVoteSuccess(`已设置投票代理！交易ID: ${result.transaction_id.substring(0, 16)}...`)
+    } catch (err) {
+      setVoteError(err instanceof Error ? err.message : '设置代理失败')
+    } finally {
+      setVoting(false)
+    }
   }
 
   if (loading) {
@@ -184,7 +281,7 @@ export default function VotingPage() {
             <span className="text-sm text-slate-500 dark:text-slate-400">我的抵押</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
-            {isConnected ? `${staked.toFixed(4)} FO` : '0 FO'}
+            {connected ? `${staked.toFixed(4)} FO` : '0 FO'}
           </div>
           <div className="text-sm text-slate-400 mt-1">用于投票的抵押量</div>
         </div>
@@ -231,10 +328,18 @@ export default function VotingPage() {
               </Link>
             </div>
             <button
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
+              onClick={handleSetProxy}
+              disabled={voting}
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50"
             >
-              设为代理
-              <ArrowRight className="w-4 h-4" />
+              {voting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  设为代理
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -272,22 +377,39 @@ export default function VotingPage() {
               </span>
             ))}
           </div>
+          {/* Vote Error/Success */}
+          {voteError && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">
+              {voteError}
+            </div>
+          )}
+          {voteSuccess && (
+            <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 text-sm">
+              {voteSuccess}
+            </div>
+          )}
+
           {/* Vote Button */}
           <div className="mt-4 pt-4 border-t border-purple-500/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <AlertCircle className="w-4 h-4" />
-              <span>投票需要连接钱包并有抵押的 FO</span>
+              <span>{connected ? '选择节点后点击确认投票' : '投票需要连接钱包'}</span>
             </div>
             <button
-              disabled={selectedProducers.size === 0}
+              onClick={handleVote}
+              disabled={selectedProducers.size === 0 || voting || !connected}
               className={cn(
                 'px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all',
-                selectedProducers.size > 0
+                selectedProducers.size > 0 && connected
                   ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:opacity-90'
                   : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
               )}
             >
-              <Vote className="w-4 h-4" />
+              {voting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Vote className="w-4 h-4" />
+              )}
               确认投票 ({selectedProducers.size})
             </button>
           </div>
@@ -434,12 +556,16 @@ export default function VotingPage() {
       </div>
 
       {/* Connect Wallet Prompt */}
-      {!isConnected && (
+      {!connected && (
         <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-2xl border border-purple-500/20 p-8 text-center">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">连接钱包参与投票</h3>
           <p className="text-slate-500 dark:text-slate-400 mb-4">连接您的 FIBOS 钱包以进行节点投票</p>
-          <button className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity">
-            连接钱包
+          <button
+            onClick={() => connect()}
+            disabled={connecting}
+            className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {connecting ? '连接中...' : '连接钱包'}
           </button>
         </div>
       )}

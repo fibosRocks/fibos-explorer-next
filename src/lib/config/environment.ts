@@ -23,3 +23,14 @@ export const environment = {
   // 外部 API
   bpStatusUrl: 'https://api.fibos123.com/bp_status',
 }
+
+/**
+ * 网络配置（用于钱包连接）
+ */
+export const networkConfig = {
+  blockchain: environment.chain,
+  chainId: environment.chainId,
+  host: 'fibos-tracker.chains.one',
+  port: 443,
+  protocol: 'https' as const,
+}

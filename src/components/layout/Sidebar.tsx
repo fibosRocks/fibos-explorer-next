@@ -14,9 +14,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
-    if (href === '/wallet' && pathname === '/wallet') return true
-    if (href !== '/wallet' && pathname.startsWith(href)) return true
-    return false
+    return pathname.startsWith(href)
   }
 
   return (

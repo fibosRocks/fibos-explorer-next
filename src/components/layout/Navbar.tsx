@@ -3,16 +3,17 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
-import { Vote, Monitor, Wrench, Wallet } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Vote, Monitor, Wrench, Wallet, Loader2, LogOut, ChevronDown } from 'lucide-react'
 import { ThemeToggle } from '@/components/features/ThemeToggle'
 import { NavbarSearch } from './NavbarSearch'
 import { cn } from '@/lib/utils'
+import { useWalletStore } from '@/stores/walletStore'
 
 const navItems = [
   { label: '投票', href: '/voting', icon: Vote },
   { label: '节点', href: '/nodes', icon: Monitor },
-  { label: '工具', href: '/wallet', icon: Wrench },
+  { label: '工具', href: '/wallet/transfer', icon: Wrench },
 ]
 
 const languages = [
@@ -30,6 +31,16 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
   const pathname = usePathname()
   const [currentLang, setCurrentLang] = useState('zh')
   const [showLangMenu, setShowLangMenu] = useState(false)
+  const [showWalletMenu, setShowWalletMenu] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // 钱包状态
+  const { connected, connecting, account, accountStatus, connect, disconnect, error } = useWalletStore()
+
+  // 避免 SSR 水合问题
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -146,12 +157,89 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
           <ThemeToggle />
 
           {/* Wallet Button */}
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity">
-            <Wallet className="w-4 h-4" />
-            <span className="hidden sm:inline">连接钱包</span>
-          </button>
+          {mounted && connected && account ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowWalletMenu(!showWalletMenu)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                <Wallet className="w-4 h-4" />
+                <span className="hidden sm:inline">{account.name}</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {showWalletMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowWalletMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 z-20 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden min-w-[200px]">
+                    {/* 账户信息 */}
+                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">
+                        {account.name}
+                      </div>
+                      {accountStatus && (
+                        <div className="text-xs text-slate-500 mt-1">
+                          {accountStatus.balance}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 查看账户 */}
+                    <Link
+                      href={`/explorer/accounts/${account.name}`}
+                      onClick={() => setShowWalletMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <Wallet className="w-4 h-4" />
+                      查看账户
+                    </Link>
+
+                    {/* 断开连接 */}
+                    <button
+                      onClick={() => {
+                        disconnect()
+                        setShowWalletMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      断开连接
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => connect()}
+              disabled={connecting}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">连接中...</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-4 h-4" />
+                  <span className="hidden sm:inline">连接钱包</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* 错误提示 */}
+      {mounted && error && (
+        <div className="absolute top-full left-0 right-0 bg-red-500 text-white text-sm text-center py-2">
+          {error}
+        </div>
+      )}
     </header>
   )
 }
