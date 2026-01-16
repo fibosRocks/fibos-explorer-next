@@ -1,44 +1,90 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, X, Play, Trash2, Shield, Loader2, AlertCircle, Search } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Check, X, Play, Trash2, Shield, Loader2, AlertCircle, Search, ChevronDown, ChevronRight } from 'lucide-react'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 
 type MsigAction = 'approve' | 'unapprove' | 'exec' | 'cancel'
 
+interface ApprovalLevel {
+  actor: string
+  permission: string
+}
+
+interface ApprovalStatus {
+  actor: string
+  permission: string
+  status: 'approved' | 'unapproved'
+}
+
 interface ProposalData {
   proposal_name: string
-  packed_transaction: string
-  earliest_exec_time?: string
+  provided_approvals: { level: ApprovalLevel }[]
+  requested_approvals: { level: ApprovalLevel }[]
+  status: ApprovalStatus[]
+  tx?: any
+  open?: boolean
 }
 
 export default function MultisigPage() {
   const { connected, account, connect, transact, getPermission } = useWalletStore()
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
   const [proposer, setProposer] = useState('')
   const [proposalName, setProposalName] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
-  const [proposalData, setProposalData] = useState<ProposalData | null>(null)
+  const [proposalList, setProposalList] = useState<ProposalData[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<{ message: string; txId?: string } | null>(null)
 
-  const handleFetchProposal = async () => {
-    if (!proposer || !proposalName) {
-        setError('请输入提案人和提案名称')
+  // 从 URL 参数初始化并自动查询
+  useEffect(() => {
+    const urlProposer = searchParams.get('proposer')
+    const urlProposal = searchParams.get('proposal')
+
+    if (urlProposer) {
+      setProposer(urlProposer)
+      if (urlProposal) {
+        setProposalName(urlProposal)
+      }
+    }
+  }, [searchParams])
+
+  // 更新 URL 参数
+  const updateUrl = useCallback((newProposer: string, newProposalName: string) => {
+    const params = new URLSearchParams()
+    if (newProposer) params.set('proposer', newProposer)
+    if (newProposalName) params.set('proposal', newProposalName)
+
+    const queryString = params.toString()
+    router.replace(queryString ? `?${queryString}` : '/wallet/multisig', { scroll: false })
+  }, [router])
+
+  const handleFetchProposal = useCallback(async (searchProposer?: string, searchProposalName?: string) => {
+    const targetProposer = searchProposer ?? proposer
+    const targetProposalName = searchProposalName ?? proposalName
+
+    if (!targetProposer) {
+        setError('请输入提案人账户')
         return
     }
 
+    // 更新 URL
+    updateUrl(targetProposer, targetProposalName)
+
     setFetching(true)
     setError(null)
-    setProposalData(null)
+    setProposalList([])
     setSuccess(null)
 
     try {
-        const response = await fetch('/api/rpc', {
+        // 1. 查询 approvals2 表获取批准状态
+        const approvalsResponse = await fetch('/api/rpc', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -46,38 +92,125 @@ export default function MultisigPage() {
               data: {
                 json: true,
                 code: 'eosio.msig',
-                scope: proposer,
-                table: 'proposal',
-                lower_bound: proposalName,
-                limit: 1
+                scope: targetProposer,
+                table: 'approvals2',
+                lower_bound: targetProposalName || undefined,
+                limit: targetProposalName ? 1 : 100
               },
             }),
         })
 
-        if (!response.ok) throw new Error('查询失败')
-        const data = await response.json()
+        if (!approvalsResponse.ok) throw new Error('查询失败')
+        const approvalsData = await approvalsResponse.json()
 
-        const row = data.rows?.[0]
-        if (row && row.proposal_name === proposalName) {
-            setProposalData(row)
-        } else {
-            setError('未找到该提案')
+        let rows = approvalsData.rows || []
+
+        // 如果指定了 proposalName，精确匹配
+        if (targetProposalName && rows.length > 0) {
+            rows = rows.filter((r: any) => r.proposal_name === targetProposalName)
         }
+
+        if (rows.length === 0) {
+            setError('未找到提案')
+            setFetching(false)
+            return
+        }
+
+        // 处理批准状态
+        const proposals: ProposalData[] = rows.map((proposal: any) => {
+            const status: ApprovalStatus[] = []
+
+            // 已批准的
+            proposal.provided_approvals?.forEach((approval: any) => {
+                const level = approval.level || approval
+                status.push({
+                    actor: level.actor,
+                    permission: level.permission,
+                    status: 'approved'
+                })
+            })
+
+            // 待批准的
+            proposal.requested_approvals?.forEach((approval: any) => {
+                const level = approval.level || approval
+                status.push({
+                    actor: level.actor,
+                    permission: level.permission,
+                    status: 'unapproved'
+                })
+            })
+
+            return {
+                ...proposal,
+                status,
+                open: false
+            }
+        })
+
+        // 2. 查询 proposal 表获取交易详情
+        const proposalResponse = await fetch('/api/rpc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              path: '/v1/chain/get_table_rows',
+              data: {
+                json: true,
+                code: 'eosio.msig',
+                scope: targetProposer,
+                table: 'proposal',
+                lower_bound: targetProposalName || undefined,
+                limit: targetProposalName ? 1 : 100
+              },
+            }),
+        })
+
+        if (proposalResponse.ok) {
+            const proposalData = await proposalResponse.json()
+            const proposalDetails = proposalData.rows || []
+
+            // 合并交易详情到提案列表
+            proposalDetails.forEach((detail: any) => {
+                const idx = proposals.findIndex(p => p.proposal_name === detail.proposal_name)
+                if (idx !== -1) {
+                    proposals[idx].tx = {
+                        packed_transaction: detail.packed_transaction
+                    }
+                }
+            })
+        }
+
+        setProposalList(proposals)
     } catch (err) {
         setError(err instanceof Error ? err.message : '查询失败')
     } finally {
         setFetching(false)
     }
+  }, [updateUrl])
+
+  // URL 参数变化时自动查询
+  useEffect(() => {
+    const urlProposer = searchParams.get('proposer')
+    const urlProposal = searchParams.get('proposal')
+
+    if (urlProposer) {
+      handleFetchProposal(urlProposer, urlProposal || '')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleProposal = (name: string) => {
+    setProposalList(prev => prev.map(p =>
+        p.proposal_name === name ? { ...p, open: !p.open } : p
+    ))
   }
 
-  const handleAction = async (action: MsigAction) => {
+  const handleAction = async (action: MsigAction, proposal: ProposalData) => {
     if (!connected || !account) {
         connect()
         return
     }
 
-    if (!proposer || !proposalName) {
-        setError('请输入提案人和提案名称')
+    if (!proposer) {
+        setError('请输入提案人账户')
         return
     }
 
@@ -96,25 +229,25 @@ export default function MultisigPage() {
             account: 'eosio.msig',
             name: action,
             authorization: [permission],
-            data: {}
+            data: {} as any
         }
 
         if (action === 'approve' || action === 'unapprove') {
             act.data = {
                 proposer,
-                proposal_name: proposalName,
-                level: permission // { actor, permission }
+                proposal_name: proposal.proposal_name,
+                level: permission
             }
         } else if (action === 'exec') {
             act.data = {
                 proposer,
-                proposal_name: proposalName,
+                proposal_name: proposal.proposal_name,
                 executer: account.name
             }
         } else if (action === 'cancel') {
             act.data = {
                 proposer,
-                proposal_name: proposalName,
+                proposal_name: proposal.proposal_name,
                 canceler: account.name
             }
         }
@@ -133,6 +266,9 @@ export default function MultisigPage() {
             message: msg,
             txId: result.transaction_id
         })
+
+        // 刷新列表
+        setTimeout(() => handleFetchProposal(), 1000)
     } catch (err) {
         setError(err instanceof Error ? err.message : '操作失败')
     } finally {
@@ -149,7 +285,7 @@ export default function MultisigPage() {
       </div>
 
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">操作提案</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">查询提案</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Proposer */}
@@ -169,19 +305,19 @@ export default function MultisigPage() {
             {/* Proposal Name */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    提案名称 (Proposal Name)
+                    提案名称 (可选)
                 </label>
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={proposalName}
                         onChange={(e) => setProposalName(e.target.value)}
-                        placeholder="输入提案名称"
+                        placeholder="留空查询所有提案"
                         className="flex-1 h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                     />
                     <button
-                        onClick={handleFetchProposal}
-                        disabled={fetching || !proposer || !proposalName}
+                        onClick={() => handleFetchProposal()}
+                        disabled={fetching || !proposer}
                         className="h-12 px-4 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                         {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -190,25 +326,6 @@ export default function MultisigPage() {
                 </div>
             </div>
         </div>
-
-        {/* Proposal Details */}
-        {proposalData && (
-            <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">提案详情</h3>
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-slate-500">提案名称:</span>
-                        <span className="font-mono text-slate-900 dark:text-white">{proposalData.proposal_name}</span>
-                    </div>
-                    <div>
-                        <span className="text-slate-500 block mb-1">Packed Transaction:</span>
-                        <div className="bg-slate-200 dark:bg-slate-800 p-2 rounded text-xs font-mono break-all text-slate-600 dark:text-slate-400 max-h-32 overflow-y-auto">
-                            {proposalData.packed_transaction}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )}
 
         {error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
@@ -225,41 +342,122 @@ export default function MultisigPage() {
             />
         )}
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
-                onClick={() => handleAction('approve')}
-                disabled={loading || !connected || !proposalData}
-                className="h-12 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl font-medium hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                批准 (Approve)
-            </button>
-            <button
-                onClick={() => handleAction('unapprove')}
-                disabled={loading || !connected || !proposalData}
-                className="h-12 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-xl font-medium hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                撤销 (Unapprove)
-            </button>
-            <button
-                onClick={() => handleAction('exec')}
-                disabled={loading || !connected || !proposalData}
-                className="h-12 bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 rounded-xl font-medium hover:bg-purple-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                执行 (Execute)
-            </button>
-            <button
-                onClick={() => handleAction('cancel')}
-                disabled={loading || !connected || !proposalData}
-                className="h-12 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-xl font-medium hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                取消 (Cancel)
-            </button>
-        </div>
+        {/* Proposal List */}
+        {proposalList.length > 0 && (
+            <div className="space-y-4">
+                {proposalList.map((proposal) => (
+                    <div
+                        key={proposal.proposal_name}
+                        className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden"
+                    >
+                        {/* Proposal Header */}
+                        <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-100 dark:bg-slate-800/50">
+                            <div className="flex items-center gap-3">
+                                <span className="font-mono font-semibold text-slate-900 dark:text-white">
+                                    {proposal.proposal_name}
+                                </span>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                    完成度: {proposal.provided_approvals?.length || 0} / {proposal.status?.length || 0}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => handleAction('approve', proposal)}
+                                    disabled={loading || !connected}
+                                    className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-medium hover:bg-emerald-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                    <Check className="w-3.5 h-3.5" />
+                                    批准
+                                </button>
+                                <button
+                                    onClick={() => handleAction('unapprove', proposal)}
+                                    disabled={loading || !connected}
+                                    className="px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-lg text-sm font-medium hover:bg-amber-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                    撤销
+                                </button>
+                                <button
+                                    onClick={() => handleAction('exec', proposal)}
+                                    disabled={loading || !connected}
+                                    className="px-3 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 rounded-lg text-sm font-medium hover:bg-purple-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                    <Play className="w-3.5 h-3.5" />
+                                    执行
+                                </button>
+                                <button
+                                    onClick={() => handleAction('cancel', proposal)}
+                                    disabled={loading || !connected}
+                                    className="px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Proposal Body */}
+                        <div className="p-4 space-y-4">
+                            {/* Transaction Details */}
+                            {proposal.tx && (
+                                <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                                    <button
+                                        onClick={() => toggleProposal(proposal.proposal_name)}
+                                        className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                    >
+                                        {proposal.open ? (
+                                            <ChevronDown className="w-4 h-4" />
+                                        ) : (
+                                            <ChevronRight className="w-4 h-4" />
+                                        )}
+                                        交易详情
+                                    </button>
+                                    {proposal.open && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-900">
+                                            <pre className="text-xs font-mono text-slate-600 dark:text-slate-400 overflow-x-auto whitespace-pre-wrap break-all">
+                                                {proposal.tx.packed_transaction}
+                                            </pre>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Approval Status Table */}
+                            {proposal.status && proposal.status.length > 0 && (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-slate-200 dark:border-slate-700">
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">账户</th>
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">权限</th>
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">状态</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {proposal.status.map((approval, idx) => (
+                                                <tr key={idx} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                                    <td className="py-2 px-3 font-mono text-slate-900 dark:text-white">{approval.actor}</td>
+                                                    <td className="py-2 px-3 text-slate-600 dark:text-slate-400">{approval.permission}</td>
+                                                    <td className="py-2 px-3">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                                            approval.status === 'approved'
+                                                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                                        }`}>
+                                                            {approval.status === 'approved' ? '已批准' : '待批准'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
 
         <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-2 mb-2 font-medium text-slate-700 dark:text-slate-300">
