@@ -66,6 +66,9 @@ export default function VotingPage() {
   const [proxySuccess, setProxySuccess] = useState<{ message: string; txId?: string } | null>(null)
   const [proxyError, setProxyError] = useState<string | null>(null)
 
+  // 当前代理（如果已设置）
+  const [currentProxy, setCurrentProxy] = useState<string | null>(null)
+
   // 计算抵押数量
   const staked = accountStatus?.staked || 0
 
@@ -106,10 +109,22 @@ export default function VotingPage() {
     fetchData()
   }, [])
 
-  // 当钱包连接后，加载已投票节点
+  // 当钱包连接后，加载已投票节点或代理
   useEffect(() => {
-    if (connected && accountInfo?.voter_info?.producers) {
-      setSelectedProducers(new Set(accountInfo.voter_info.producers))
+    if (connected && accountInfo?.voter_info) {
+      const { proxy, producers } = accountInfo.voter_info
+      // 如果设置了代理
+      if (proxy && proxy !== '') {
+        setCurrentProxy(proxy)
+        setSelectedProducers(new Set())
+      } else {
+        setCurrentProxy(null)
+        if (producers && producers.length > 0) {
+          setSelectedProducers(new Set(producers))
+        }
+      }
+    } else {
+      setCurrentProxy(null)
     }
   }, [connected, accountInfo])
 
@@ -234,6 +249,8 @@ export default function VotingPage() {
         txId: result.transaction_id
       })
 
+      // 更新当前代理状态
+      setCurrentProxy(RECOMMENDED_PROXY)
       // 清空本地选择，避免 UI 混淆
       setSelectedProducers(new Set())
     } catch (err) {
@@ -320,66 +337,127 @@ export default function VotingPage() {
         </div>
       </div>
 
-      {/* Proxy Voting Recommendation */}
-      <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl border border-amber-500/20 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <UserCheck className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+      {/* Current Proxy Status - Show if user has set a proxy */}
+      {/* Green for recommended proxy, Yellow for other proxies */}
+      {connected && currentProxy && (
+        <div className={cn(
+          "rounded-2xl p-5",
+          currentProxy === RECOMMENDED_PROXY
+            ? "bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20"
+            : "bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20"
+        )}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center",
+                currentProxy === RECOMMENDED_PROXY ? "bg-emerald-500/20" : "bg-yellow-500/20"
+              )}>
+                <UserCheck className={cn(
+                  "w-6 h-6",
+                  currentProxy === RECOMMENDED_PROXY
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-yellow-600 dark:text-yellow-400"
+                )} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                  {t('voting.currentProxyTitle')}
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                  {t('voting.currentProxyDesc')}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                {t('voting.useProxy')}
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                {t('voting.useProxyDesc')}
-              </p>
+            <div className="flex items-center gap-3 sm:ml-auto">
+              <div className="text-right">
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.currentProxy')}</div>
+                <Link
+                  href={`/explorer/accounts/${currentProxy}`}
+                  className={cn(
+                    "font-mono text-sm hover:underline",
+                    currentProxy === RECOMMENDED_PROXY
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-yellow-600 dark:text-yellow-400"
+                  )}
+                >
+                  {currentProxy}
+                </Link>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 sm:ml-auto">
-            <div className="text-right">
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.recommendedProxy')}</div>
-              <Link
-                href={`/explorer/accounts/${RECOMMENDED_PROXY}`}
-                className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:underline"
+          <div className={cn(
+            "mt-4 pt-4 border-t",
+            currentProxy === RECOMMENDED_PROXY ? "border-emerald-500/20" : "border-yellow-500/20"
+          )}>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t('voting.proxyActiveInfo')}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Proxy Voting Recommendation - Hide if already set to recommended proxy */}
+      {currentProxy !== RECOMMENDED_PROXY && (
+        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl border border-amber-500/20 p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <UserCheck className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                  {currentProxy ? t('voting.changeProxy') : t('voting.useProxy')}
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                  {t('voting.useProxyDesc')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:ml-auto">
+              <div className="text-right">
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.recommendedProxy')}</div>
+                <Link
+                  href={`/explorer/accounts/${RECOMMENDED_PROXY}`}
+                  className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:underline"
+                >
+                  {RECOMMENDED_PROXY}
+                </Link>
+              </div>
+              <button
+                onClick={handleSetProxy}
+                disabled={proxyVoting}
+                className="px-4 py-2.5 md:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50 min-h-[44px] md:min-h-0"
               >
-                {RECOMMENDED_PROXY}
-              </Link>
+                {proxyVoting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {t('voting.setAsProxy')}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              onClick={handleSetProxy}
-              disabled={proxyVoting}
-              className="px-4 py-2.5 md:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50 min-h-[44px] md:min-h-0"
-            >
-              {proxyVoting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  {t('voting.setAsProxy')}
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+          </div>
+          {proxyError && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">
+              {proxyError}
+            </div>
+          )}
+          {proxySuccess && (
+            <TransactionSuccess
+              message={proxySuccess.message}
+              txId={proxySuccess.txId}
+              className="mt-4 bg-emerald-500/10 border-emerald-500/20"
+            />
+          )}
+          <div className="mt-4 pt-4 border-t border-amber-500/20">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t('voting.proxyInfoText')}
+            </p>
           </div>
         </div>
-        {proxyError && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">
-            {proxyError}
-          </div>
-        )}
-        {proxySuccess && (
-          <TransactionSuccess
-            message={proxySuccess.message}
-            txId={proxySuccess.txId}
-            className="mt-4 bg-emerald-500/10 border-emerald-500/20"
-          />
-        )}
-        <div className="mt-4 pt-4 border-t border-amber-500/20">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {t('voting.proxyInfoText')}
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Selected Producers Summary */}
       {selectedProducers.size > 0 && (

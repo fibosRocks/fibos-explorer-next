@@ -182,7 +182,12 @@
     "errorSelectNode": "Please select at least one node",
     "errorNoPermission": "Cannot get account permission",
     "errorVoteFailed": "Vote failed",
-    "errorProxyFailed": "Set proxy failed"
+    "errorProxyFailed": "Set proxy failed",
+    "currentProxyTitle": "Proxy Voting Active",
+    "currentProxyDesc": "Your voting power is delegated to a proxy",
+    "proxyActiveInfo": "Your votes will follow the proxy's choices. You can change or cancel the proxy anytime.",
+    "changeProxy": "Change Proxy",
+    "alreadySet": "Already Set"
   },
   "nodes": {
     "title": "Node Status",

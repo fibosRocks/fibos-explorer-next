@@ -182,7 +182,12 @@
     "errorSelectNode": "请至少选择一个节点",
     "errorNoPermission": "无法获取账户权限",
     "errorVoteFailed": "投票失败",
-    "errorProxyFailed": "设置代理失败"
+    "errorProxyFailed": "设置代理失败",
+    "currentProxyTitle": "已设置投票代理",
+    "currentProxyDesc": "您的投票权已委托给代理人",
+    "proxyActiveInfo": "您的投票将跟随代理人的选择，您可以随时更换代理或取消代理直接投票。",
+    "changeProxy": "更换代理",
+    "alreadySet": "已设置"
   },
   "nodes": {
     "title": "节点状态",
