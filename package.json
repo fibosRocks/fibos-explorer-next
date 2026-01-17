@@ -15,7 +15,10 @@
     "test": "bun test",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:preview": "npx wrangler pages dev .vercel/output/static",
+    "pages:deploy": "npx wrangler pages deploy .vercel/output/static"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.1",
@@ -32,6 +35,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@playwright/test": "^1.50.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/bun": "latest",
