@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRightLeft, Clock, Hash, Box, User, FileCode, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowRightLeft, Clock, Hash, Box, User, FileCode, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
 import type { Action, TransactionActionTrace } from '@/lib/services/types'
 
@@ -89,12 +89,21 @@ export default async function TransactionPage({ params }: PageProps) {
         <p className="text-sm text-slate-400 mt-2 font-mono break-all max-w-lg text-center">
           {id}
         </p>
-        <Link
-          href="/"
-          className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-        >
-          返回首页
-        </Link>
+        <div className="flex gap-3 mt-4">
+          <Link
+            href={`/explorer/transactions/${id}`}
+            className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            重试
+          </Link>
+          <Link
+            href="/"
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+          >
+            返回首页
+          </Link>
+        </div>
       </div>
     )
   }

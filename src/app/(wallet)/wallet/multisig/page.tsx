@@ -185,7 +185,7 @@ function MultisigContent() {
     } finally {
         setFetching(false)
     }
-  }, [updateUrl])
+  }, [proposer, proposalName, updateUrl])
 
   // URL 参数变化时自动查询
   useEffect(() => {
