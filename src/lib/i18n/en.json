@@ -406,7 +406,11 @@
     "successApprove": "Proposal approved successfully",
     "successUnapprove": "Approval cancelled",
     "successExec": "Proposal executed successfully",
-    "successCancel": "Proposal cancelled"
+    "successCancel": "Proposal cancelled",
+    "parsing": "Parsing transaction data...",
+    "parseError": "Unable to parse transaction data",
+    "authorization": "Authorization",
+    "data": "Data"
   },
   "wallet": {
     "connectPrompt": "Please connect your wallet first",

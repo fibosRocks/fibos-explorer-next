@@ -406,7 +406,11 @@
     "successApprove": "提案批准成功",
     "successUnapprove": "已取消批准",
     "successExec": "提案执行成功",
-    "successCancel": "提案已取消"
+    "successCancel": "提案已取消",
+    "parsing": "正在解析交易数据...",
+    "parseError": "无法解析交易数据",
+    "authorization": "授权",
+    "data": "数据"
   },
   "wallet": {
     "connectPrompt": "请先连接钱包",

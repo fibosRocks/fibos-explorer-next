@@ -20,12 +20,31 @@ interface ApprovalStatus {
   status: 'approved' | 'unapproved'
 }
 
+interface ParsedAction {
+  account: string
+  name: string
+  authorization: { actor: string; permission: string }[]
+  data: Record<string, unknown>
+}
+
+interface ParsedTransaction {
+  expiration: string
+  ref_block_num: number
+  ref_block_prefix: number
+  actions: ParsedAction[]
+}
+
 interface ProposalData {
   proposal_name: string
   provided_approvals: { level: ApprovalLevel }[]
   requested_approvals: { level: ApprovalLevel }[]
   status: ApprovalStatus[]
-  tx?: any
+  tx?: {
+    packed_transaction: string
+    parsed?: ParsedTransaction
+    parsing?: boolean
+    parseError?: string
+  }
   open?: boolean
 }
 
@@ -199,10 +218,53 @@ function MultisigContent() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const toggleProposal = (name: string) => {
-    setProposalList(prev => prev.map(p =>
+  const toggleProposal = async (name: string) => {
+    const proposal = proposalList.find(p => p.proposal_name === name)
+
+    // 如果正在打开且还没有解析过，则开始解析
+    if (proposal && !proposal.open && proposal.tx?.packed_transaction && !proposal.tx.parsed && !proposal.tx.parsing) {
+      // 先标记为正在解析
+      setProposalList(prev => prev.map(p =>
+        p.proposal_name === name
+          ? { ...p, open: true, tx: { ...p.tx!, parsing: true } }
+          : p
+      ))
+
+      try {
+        const response = await fetch('/api/parse-transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ packed_transaction: proposal.tx.packed_transaction }),
+        })
+
+        if (response.ok) {
+          const parsed = await response.json()
+          setProposalList(prev => prev.map(p =>
+            p.proposal_name === name
+              ? { ...p, tx: { ...p.tx!, parsed, parsing: false } }
+              : p
+          ))
+        } else {
+          const errorData = await response.json()
+          setProposalList(prev => prev.map(p =>
+            p.proposal_name === name
+              ? { ...p, tx: { ...p.tx!, parseError: errorData.error || t('multisig.parseError'), parsing: false } }
+              : p
+          ))
+        }
+      } catch (err) {
+        setProposalList(prev => prev.map(p =>
+          p.proposal_name === name
+            ? { ...p, tx: { ...p.tx!, parseError: t('multisig.parseError'), parsing: false } }
+            : p
+        ))
+      }
+    } else {
+      // 简单切换展开状态
+      setProposalList(prev => prev.map(p =>
         p.proposal_name === name ? { ...p, open: !p.open } : p
-    ))
+      ))
+    }
   }
 
   const handleAction = async (action: MsigAction, proposal: ProposalData) => {
@@ -416,10 +478,70 @@ function MultisigContent() {
                                         {t('multisig.txDetails')}
                                     </button>
                                     {proposal.open && (
-                                        <div className="p-3 bg-slate-50 dark:bg-slate-900">
-                                            <pre className="text-xs font-mono text-slate-600 dark:text-slate-400 overflow-x-auto whitespace-pre-wrap break-all">
-                                                {proposal.tx.packed_transaction}
-                                            </pre>
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-900 space-y-3">
+                                            {/* 正在解析 */}
+                                            {proposal.tx.parsing && (
+                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    {t('multisig.parsing')}
+                                                </div>
+                                            )}
+
+                                            {/* 解析错误 */}
+                                            {proposal.tx.parseError && (
+                                                <div className="text-sm text-amber-600 dark:text-amber-400">
+                                                    {proposal.tx.parseError}
+                                                    <div className="mt-2">
+                                                        <pre className="text-xs font-mono text-slate-500 overflow-x-auto whitespace-pre-wrap break-all">
+                                                            {proposal.tx.packed_transaction}
+                                                        </pre>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 解析成功后显示 actions */}
+                                            {proposal.tx.parsed && (
+                                                <div className="space-y-3">
+                                                    {proposal.tx.parsed.actions.map((action, idx) => (
+                                                        <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                                                            {/* Action 头部 */}
+                                                            <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 flex items-center gap-2">
+                                                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">#{idx + 1}</span>
+                                                                <span className="font-mono text-sm text-purple-600 dark:text-cyan-400">{action.account}</span>
+                                                                <span className="text-slate-400">::</span>
+                                                                <span className="font-medium text-sm text-slate-900 dark:text-white">{action.name}</span>
+                                                            </div>
+                                                            {/* Action 授权 */}
+                                                            <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                                                                <span className="text-xs text-slate-500 dark:text-slate-400">{t('multisig.authorization')}: </span>
+                                                                {action.authorization.map((auth, authIdx) => (
+                                                                    <span key={authIdx} className="text-xs font-mono text-slate-700 dark:text-slate-300">
+                                                                        {authIdx > 0 && ', '}
+                                                                        {auth.actor}@{auth.permission}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                            {/* Action 数据 */}
+                                                            <div className="px-3 py-2">
+                                                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('multisig.data')}:</div>
+                                                                <pre className="text-xs font-mono text-slate-600 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap break-all">
+                                                                    {typeof action.data === 'object'
+                                                                        ? JSON.stringify(action.data, null, 2)
+                                                                        : String(action.data)
+                                                                    }
+                                                                </pre>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* 如果还没解析也没错误，显示原始数据 */}
+                                            {!proposal.tx.parsed && !proposal.tx.parseError && !proposal.tx.parsing && (
+                                                <pre className="text-xs font-mono text-slate-600 dark:text-slate-400 overflow-x-auto whitespace-pre-wrap break-all">
+                                                    {proposal.tx.packed_transaction}
+                                                </pre>
+                                            )}
                                         </div>
                                     )}
                                 </div>
