@@ -99,3 +99,10 @@ src/
 - **禁止自动部署**: 不要在完成修改后自动执行部署命令
 - 部署操作必须由用户明确请求后才能执行
 - 使用 `vercel --prod` 部署到 Vercel
+
+## TODO
+
+待解决的问题：
+
+- [ ] **钱包切换状态问题**: 切换钱包时有机率没有切换成功，导致用错私钥签名。可能需要每次登录都清除状态，确保使用正确的钱包实例。相关文件: `src/stores/walletStore.ts`
+- [ ] **eosjs-classic-fibos 多签支持**: 多签批准报错 `[ "Missing checksum256$ in approve.fields.proposal_hash", "Missing time_point?$ in proposal.fields.earliest_exec_time" ]`，需要修复 eosjs-classic-fibos 库添加缺失的类型定义

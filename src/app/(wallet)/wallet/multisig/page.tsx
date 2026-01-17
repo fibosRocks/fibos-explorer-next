@@ -281,7 +281,7 @@ function MultisigContent() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">多重签名</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">管理和执行多重签名提案</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">查看多重签名提案状态</p>
       </div>
 
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
@@ -360,7 +360,8 @@ function MultisigContent() {
                                     完成度: {proposal.provided_approvals?.length || 0} / {proposal.status?.length || 0}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            {/* 操作按钮暂时隐藏，等待 eosjs-classic-fibos 修复多签类型定义后取消 hidden */}
+                            <div className="hidden items-center gap-2">
                                 <button
                                     onClick={() => handleAction('approve', proposal)}
                                     disabled={loading || !connected}
@@ -464,12 +465,8 @@ function MultisigContent() {
                 <Shield className="w-4 h-4" />
                 说明
             </div>
-            <ul className="space-y-1 list-disc list-inside">
-                <li>批准 (Approve): 同意该提案</li>
-                <li>撤销 (Unapprove): 收回之前的同意</li>
-                <li>执行 (Execute): 当收集到足够的签名后，执行该提案</li>
-                <li>取消 (Cancel): 取消该提案（仅提案人或过期后可操作）</li>
-            </ul>
+            <p>输入提案人账户名查询其发起的多签提案，可查看提案的批准进度和状态。</p>
+            <p className="mt-2 text-amber-600 dark:text-amber-400">注: 批准/撤销/执行/取消操作暂不可用，待底层库修复后开放。</p>
         </div>
       </div>
     </div>
