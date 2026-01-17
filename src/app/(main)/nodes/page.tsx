@@ -7,6 +7,7 @@ import * as eosClient from '@/lib/services/eos-client'
 import * as apiClient from '@/lib/services/api-client'
 import type { ChainInfo, Producer, BpStatus } from '@/lib/services/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface NodeWithStatus extends Producer {
   rank: number
@@ -15,11 +16,11 @@ interface NodeWithStatus extends Producer {
   votePercent: string
 }
 
-function StatusBadge({ isBad, rank, isProducing }: { isBad: boolean; rank: number; isProducing: boolean }) {
+function StatusBadge({ isBad, rank, isProducing, t }: { isBad: boolean; rank: number; isProducing: boolean; t: (key: string) => string }) {
   if (isProducing) {
     return (
       <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500 text-white animate-pulse">
-        正在出块
+        {t('nodes.producingNow')}
       </span>
     )
   }
@@ -27,7 +28,7 @@ function StatusBadge({ isBad, rank, isProducing }: { isBad: boolean; rank: numbe
   if (rank > 21) {
     return (
       <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400">
-        候选
+        {t('nodes.candidate')}
       </span>
     )
   }
@@ -35,19 +36,20 @@ function StatusBadge({ isBad, rank, isProducing }: { isBad: boolean; rank: numbe
   if (isBad) {
     return (
       <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400">
-        异常
+        {t('nodes.abnormal')}
       </span>
     )
   }
 
   return (
     <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-      出块中
+      {t('nodes.active')}
     </span>
   )
 }
 
 export default function NodesPage() {
+  const { t } = useTranslation()
   const [chainInfo, setChainInfo] = useState<ChainInfo | null>(null)
   const [producers, setProducers] = useState<Producer[]>([])
   const [bpStatusMap, setBpStatusMap] = useState<Map<string, BpStatus>>(new Map())
@@ -71,7 +73,7 @@ export default function NodesPage() {
       // 只有在没有数据时才显示错误
       setProducers(prev => {
         if (prev.length === 0) {
-             setError('获取数据失败，请稍后重试')
+             setError(t('nodes.fetchError'))
         }
         return prev
       })
@@ -180,7 +182,7 @@ export default function NodesPage() {
           onClick={fetchChainData}
           className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
-          重试
+          {t('common.retry')}
         </button>
       </div>
     )
@@ -190,8 +192,8 @@ export default function NodesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">节点监控</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">实时监控 FIBOS 网络节点状态</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('nodes.monitorTitle')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('nodes.monitorSubtitle')}</p>
       </div>
 
       {/* Network Stats */}
@@ -202,7 +204,7 @@ export default function NodesPage() {
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">健康节点</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('nodes.healthyNodes')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">{healthyProducers} / 21</div>
         </div>
@@ -213,7 +215,7 @@ export default function NodesPage() {
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
               <HardDrive className="w-5 h-5 text-purple-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">最新区块</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('nodes.headBlock')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {chainInfo?.head_block_num.toLocaleString()}
@@ -226,7 +228,7 @@ export default function NodesPage() {
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
               <Clock className="w-5 h-5 text-cyan-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">不可逆区块</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('nodes.irreversibleBlock')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {chainInfo?.last_irreversible_block_num.toLocaleString()}
@@ -239,7 +241,7 @@ export default function NodesPage() {
             <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center animate-pulse">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-sm text-emerald-700 dark:text-emerald-300">当前出块</span>
+            <span className="text-sm text-emerald-700 dark:text-emerald-300">{t('nodes.currentProducer')}</span>
           </div>
           <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300 truncate">
             {chainInfo?.head_block_producer}
@@ -251,20 +253,20 @@ export default function NodesPage() {
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
         <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            出块节点
-            <span className="ml-2 text-sm font-normal text-slate-400">(按字母排序)</span>
+            {t('nodes.producingNodes')}
+            <span className="ml-2 text-sm font-normal text-slate-400">{t('nodes.alphabetOrder')}</span>
           </h2>
           <div className="text-sm text-slate-400">
-            版本: {chainInfo?.server_version_string}
+            {t('nodes.version')}: {chainInfo?.server_version_string}
           </div>
         </div>
 
         {/* Table Header */}
         <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="col-span-1">排名</div>
-          <div className="col-span-4">节点名称</div>
-          <div className="col-span-3">状态</div>
-          <div className="col-span-4">得票率</div>
+          <div className="col-span-1">{t('nodes.rank')}</div>
+          <div className="col-span-4">{t('nodes.nodeName')}</div>
+          <div className="col-span-3">{t('nodes.status')}</div>
+          <div className="col-span-4">{t('nodes.votePercent')}</div>
         </div>
 
         {/* Table Body - Active Producers */}
@@ -324,7 +326,7 @@ export default function NodesPage() {
 
                 {/* Status */}
                 <div className="md:col-span-3 flex items-center">
-                  <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={isProducing} />
+                  <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={isProducing} t={t} />
                 </div>
 
                 {/* Vote Percent */}
@@ -350,17 +352,17 @@ export default function NodesPage() {
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
           <div className="p-5 border-b border-slate-200/50 dark:border-white/10">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              候选节点
-              <span className="ml-2 text-sm font-normal text-slate-400">(Top 5)</span>
+              {t('nodes.standbyNodes')}
+              <span className="ml-2 text-sm font-normal text-slate-400">{t('nodes.top5')}</span>
             </h2>
           </div>
 
           {/* Table Header */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            <div className="col-span-1">排名</div>
-            <div className="col-span-4">节点名称</div>
-            <div className="col-span-3">状态</div>
-            <div className="col-span-4">得票率</div>
+            <div className="col-span-1">{t('nodes.rank')}</div>
+            <div className="col-span-4">{t('nodes.nodeName')}</div>
+            <div className="col-span-3">{t('nodes.status')}</div>
+            <div className="col-span-4">{t('nodes.votePercent')}</div>
           </div>
 
           {/* Table Body - Standby Producers */}
@@ -391,7 +393,7 @@ export default function NodesPage() {
 
                 {/* Status */}
                 <div className="md:col-span-3 flex items-center">
-                  <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={false} />
+                  <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={false} t={t} />
                 </div>
 
                 {/* Vote Percent */}
@@ -416,19 +418,19 @@ export default function NodesPage() {
       <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-          <span>正在出块 - 当前正在生产区块的节点</span>
+          <span>{t('nodes.legendProducing')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-emerald-500" />
-          <span>出块中 - 节点正常</span>
+          <span>{t('nodes.legendActive')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500" />
-          <span>异常 - 超过5分钟未出块</span>
+          <span>{t('nodes.legendAbnormal')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-slate-500" />
-          <span>候选 - 排名 21 以后的备选节点</span>
+          <span>{t('nodes.legendStandby')}</span>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { ArrowRightLeft, Loader2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Action } from '@/lib/services/types'
 import * as eos from '@/lib/services/eos-client'
+import { useTranslation } from '@/lib/i18n'
 
 interface AccountTracesProps {
   accountName: string
@@ -19,6 +20,7 @@ interface GroupedTrace {
 }
 
 export function AccountTraces({ accountName }: AccountTracesProps) {
+  const { t } = useTranslation()
   const [groupedTraces, setGroupedTraces] = useState<GroupedTrace[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -88,8 +90,8 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
       setGroupedTraces(prev => cursor === -1 ? groups : [...prev, ...groups])
 
     } catch (err) {
-      console.error('获取交易记录失败:', err)
-      setError('获取交易记录失败')
+      console.error('Failed to fetch transactions:', err)
+      setError(t('account.fetchError'))
     } finally {
       setLoading(false)
       setInitialLoading(false)
@@ -116,7 +118,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
       <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ArrowRightLeft className="w-5 h-5 text-emerald-500" />
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">交易记录</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('account.transactionHistory')}</h2>
         </div>
       </div>
 
@@ -128,7 +130,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
         ) : error && groupedTraces.length === 0 ? (
           <div className="p-8 text-center text-slate-500">{error}</div>
         ) : groupedTraces.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">暂无交易记录</div>
+          <div className="p-8 text-center text-slate-500">{t('account.noTransactions')}</div>
         ) : (
           <>
             <div className="divide-y divide-slate-200/50 dark:divide-white/10">
@@ -212,12 +214,12 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      加载中...
+                      {t('common.loading')}
                     </>
                   ) : (
                     <>
                       <ChevronDown className="w-4 h-4" />
-                      加载更多记录
+                      {t('common.loadMore')}
                     </>
                   )}
                 </button>

@@ -1,7 +1,12 @@
+'use client'
+
 import { SearchBoxCool } from '@/components/features/SearchBoxCool'
 import { Navbar } from '@/components/layout/Navbar'
+import { useTranslation } from '@/lib/i18n'
 
 export default function HomePage() {
+  const { t } = useTranslation()
+
   return (
     <>
       <Navbar transparent showSearch={false} />
@@ -40,7 +45,7 @@ export default function HomePage() {
             FIBOS ROCKS
           </h1>
           <p className="text-lg text-slate-500 dark:text-slate-400 font-light tracking-widest uppercase">
-            Blockchain Explorer
+            {t('home.subtitle')}
           </p>
         </div>
 
@@ -49,11 +54,11 @@ export default function HomePage() {
         <div className="flex justify-center gap-8 text-sm text-slate-400 dark:text-slate-500">
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            实时同步
+            {t('home.realtime')}
           </span>
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-500" />
-            安全可靠
+            {t('home.secure')}
           </span>
         </div>
       </div>

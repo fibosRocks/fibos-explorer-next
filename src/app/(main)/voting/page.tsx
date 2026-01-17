@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import * as eosClient from '@/lib/services/eos-client'
 import type { Producer } from '@/lib/services/types'
 import { useWalletStore } from '@/stores/walletStore'
+import { useTranslation } from '@/lib/i18n'
 
 /**
  * 投票页面
@@ -37,6 +38,9 @@ interface ProducerWithRank extends Producer {
 }
 
 export default function VotingPage() {
+  // i18n
+  const { t } = useTranslation()
+
   // 钱包状态
   const { connected, account, accountInfo, accountStatus, connect, connecting, transact, getPermission } = useWalletStore()
 
@@ -93,7 +97,7 @@ export default function VotingPage() {
         setProducers(activeProducers)
       } catch (err) {
         console.error('获取投票数据失败:', err)
-        setError('获取数据失败，请刷新重试')
+        setError(t('voting.fetchError'))
       } finally {
         setLoading(false)
       }
@@ -151,18 +155,18 @@ export default function VotingPage() {
   // 执行投票
   const handleVote = async () => {
     if (!connected || !account) {
-      setVoteError('请先连接钱包')
+      setVoteError(t('voting.errorConnectFirst'))
       return
     }
 
     if (selectedProducers.size === 0) {
-      setVoteError('请至少选择一个节点')
+      setVoteError(t('voting.errorSelectNode'))
       return
     }
 
     const permission = getPermission()
     if (!permission) {
-      setVoteError('无法获取账户权限')
+      setVoteError(t('voting.errorNoPermission'))
       return
     }
 
@@ -186,11 +190,11 @@ export default function VotingPage() {
       }])
 
       setVoteSuccess({
-        message: '投票成功！',
+        message: t('success.vote'),
         txId: result.transaction_id
       })
     } catch (err) {
-      setVoteError(err instanceof Error ? err.message : '投票失败')
+      setVoteError(err instanceof Error ? err.message : t('voting.errorVoteFailed'))
     } finally {
       setVoting(false)
     }
@@ -205,7 +209,7 @@ export default function VotingPage() {
 
     const permission = getPermission()
     if (!permission) {
-      setProxyError('无法获取账户权限')
+      setProxyError(t('voting.errorNoPermission'))
       return
     }
 
@@ -226,14 +230,14 @@ export default function VotingPage() {
       }])
 
       setProxySuccess({
-        message: '已设置投票代理！',
+        message: t('success.proxy'),
         txId: result.transaction_id
       })
 
       // 清空本地选择，避免 UI 混淆
       setSelectedProducers(new Set())
     } catch (err) {
-      setProxyError(err instanceof Error ? err.message : '设置代理失败')
+      setProxyError(err instanceof Error ? err.message : t('voting.errorProxyFailed'))
     } finally {
       setProxyVoting(false)
     }
@@ -243,7 +247,7 @@ export default function VotingPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-4" />
-        <p>加载节点数据...</p>
+        <p>{t('nodes.loading')}</p>
       </div>
     )
   }
@@ -257,7 +261,7 @@ export default function VotingPage() {
           onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
-          刷新重试
+          {t('common.retry')}
         </button>
       </div>
     )
@@ -267,8 +271,8 @@ export default function VotingPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">节点投票</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">为 FIBOS 超级节点投票，参与社区治理</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('voting.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('voting.subtitle')}</p>
       </div>
 
       {/* Stats Cards */}
@@ -279,12 +283,12 @@ export default function VotingPage() {
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <Users className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">出块节点</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.activeProducers')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {Math.min(producers.filter(p => p.is_active).length, 21)}
           </div>
-          <div className="text-sm text-slate-400 mt-1">活跃生产者</div>
+          <div className="text-sm text-slate-400 mt-1">{t('voting.activeProducersCount')}</div>
         </div>
 
         {/* My Staked */}
@@ -293,12 +297,12 @@ export default function VotingPage() {
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-cyan-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">我的抵押</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.myStake')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {connected ? `${staked.toFixed(4)} FO` : '0 FO'}
           </div>
-          <div className="text-sm text-slate-400 mt-1">用于投票的抵押量</div>
+          <div className="text-sm text-slate-400 mt-1">{t('voting.stakeForVote')}</div>
         </div>
 
         {/* My Voted Producers */}
@@ -307,12 +311,12 @@ export default function VotingPage() {
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
               <Vote className="w-5 h-5 text-purple-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">已选节点</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.selectedCount')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
-            {selectedProducers.size} 个
+            {selectedProducers.size}
           </div>
-          <div className="text-sm text-slate-400 mt-1">最多可投 30 个</div>
+          <div className="text-sm text-slate-400 mt-1">{t('voting.maxVoteCount')}</div>
         </div>
       </div>
 
@@ -325,16 +329,16 @@ export default function VotingPage() {
             </div>
             <div className="flex-1">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                使用投票代理
+                {t('voting.useProxy')}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                不确定投给谁？将投票权委托给专业代理人，由其代为选择优质节点
+                {t('voting.useProxyDesc')}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3 sm:ml-auto">
             <div className="text-right">
-              <div className="text-xs text-slate-500 dark:text-slate-400">推荐代理人</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.recommendedProxy')}</div>
               <Link
                 href={`/explorer/accounts/${RECOMMENDED_PROXY}`}
                 className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:underline"
@@ -351,7 +355,7 @@ export default function VotingPage() {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  设为代理
+                  {t('voting.setAsProxy')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -372,7 +376,7 @@ export default function VotingPage() {
         )}
         <div className="mt-4 pt-4 border-t border-amber-500/20">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            投票代理机制允许您将投票权委托给信任的代理人。代理人会根据其专业判断为您投票，您的票权会自动跟随代理人的投票选择。您可以随时取消代理或更换代理人。
+            {t('voting.proxyInfoText')}
           </p>
         </div>
       </div>
@@ -384,14 +388,14 @@ export default function VotingPage() {
             <div className="flex items-center gap-2">
               <CheckSquare className="w-4 h-4 text-purple-500" />
               <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                已选择 {selectedProducers.size} 个节点
+                {t('voting.selectedXNodes').replace('{count}', String(selectedProducers.size))}
               </span>
             </div>
             <button
               onClick={clearSelection}
               className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
             >
-              清空选择
+              {t('voting.clearSelection')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -422,7 +426,7 @@ export default function VotingPage() {
           <div className="mt-4 pt-4 border-t border-purple-500/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <AlertCircle className="w-4 h-4" />
-              <span>{connected ? '选择节点后点击确认投票' : '投票需要连接钱包'}</span>
+              <span>{connected ? t('voting.selectThenVote') : t('voting.needWallet')}</span>
             </div>
             <button
               onClick={handleVote}
@@ -439,7 +443,7 @@ export default function VotingPage() {
               ) : (
                 <Vote className="w-4 h-4" />
               )}
-              确认投票 ({selectedProducers.size})
+              {t('voting.confirmVote')} ({selectedProducers.size})
             </button>
           </div>
         </div>
@@ -451,9 +455,9 @@ export default function VotingPage() {
         <div className="p-4 border-b border-slate-200/50 dark:border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              超级节点列表
+              {t('voting.producerList')}
               <span className="ml-2 text-sm font-normal text-slate-400">
-                共 {producers.length} 个
+                {t('voting.totalProducers').replace('{count}', String(producers.length))}
               </span>
             </h2>
             <div className="flex items-center gap-2">
@@ -461,7 +465,7 @@ export default function VotingPage() {
                 onClick={selectTop21}
                 className="px-3 py-1.5 text-xs font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-colors"
               >
-                选择前21
+                {t('voting.selectTop21')}
               </button>
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -469,7 +473,7 @@ export default function VotingPage() {
                   type="text"
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
-                  placeholder="搜索节点..."
+                  placeholder={t('voting.searchProducer')}
                   className="h-8 pl-9 pr-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
@@ -480,11 +484,11 @@ export default function VotingPage() {
         {/* Table Header */}
         <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-500 dark:text-slate-400">
           <div className="col-span-1"></div>
-          <div className="col-span-1">排名</div>
-          <div className="col-span-4">节点名称</div>
-          <div className="col-span-3">得票权重</div>
-          <div className="col-span-2">得票率</div>
-          <div className="col-span-1">状态</div>
+          <div className="col-span-1">{t('nodes.rank')}</div>
+          <div className="col-span-4">{t('voting.nodeName')}</div>
+          <div className="col-span-3">{t('voting.voteWeight')}</div>
+          <div className="col-span-2">{t('nodes.votePercent')}</div>
+          <div className="col-span-1">{t('nodes.status')}</div>
         </div>
 
         {/* Producers */}
@@ -566,15 +570,15 @@ export default function VotingPage() {
                 <div className="sm:col-span-1">
                   {producer.rank <= 21 && isActive ? (
                     <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      出块
+                      {t('voting.producing')}
                     </span>
                   ) : !isActive ? (
                     <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-500">
-                      注销
+                      {t('voting.inactive')}
                     </span>
                   ) : (
                     <span className="text-xs px-2 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">
-                      候选
+                      {t('voting.candidate')}
                     </span>
                   )}
                 </div>
@@ -587,14 +591,14 @@ export default function VotingPage() {
       {/* Connect Wallet Prompt */}
       {!connected && (
         <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-2xl border border-purple-500/20 p-8 text-center">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">连接钱包参与投票</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">连接您的 FIBOS 钱包以进行节点投票</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">{t('voting.connectForVote')}</h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">{t('voting.connectForVoteDesc')}</p>
           <button
             onClick={() => connect()}
             disabled={connecting}
             className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {connecting ? '连接中...' : '连接钱包'}
+            {connecting ? t('common.connecting') : t('common.connect')}
           </button>
         </div>
       )}

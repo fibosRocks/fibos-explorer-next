@@ -2,8 +2,10 @@
 
 import { Sun, Moon } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 export function ThemeToggle() {
+  const { t } = useTranslation()
   const [isDark, setIsDark] = useState(false)
 
   const toggleTheme = () => {
@@ -20,7 +22,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      title={isDark ? '切换到浅色' : '切换到深色'}
+      title={isDark ? t('common.switchToLight') : t('common.switchToDark')}
       className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200"
     >
       {isDark ? (

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Wrench } from 'lucide-react'
 import { walletNavConfig } from '@/lib/constants/navigation'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface SidebarProps {
   className?: string
@@ -12,6 +13,7 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const { t } = useTranslation()
 
   const isActive = (href: string) => {
     return pathname.startsWith(href)
@@ -32,7 +34,7 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           <Wrench className="w-4 h-4" />
-          <span>工具</span>
+          <span>{t('nav.wallet')}</span>
         </div>
 
         {/* Nav Items */}
@@ -52,7 +54,7 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
               >
                 <item.icon className={cn('w-4 h-4', active && 'text-purple-500 dark:text-cyan-400')} />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             )
           })}

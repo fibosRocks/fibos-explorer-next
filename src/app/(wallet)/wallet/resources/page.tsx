@@ -5,11 +5,13 @@ import { Cpu, HardDrive, Wifi, ArrowUp, ArrowDown, Info, RefreshCw, Loader2 } fr
 import { cn } from '@/lib/utils'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
+import { useTranslation } from '@/lib/i18n'
 
 type Tab = 'cpu' | 'net' | 'ram'
 type Action = 'stake' | 'unstake'
 
 export default function ResourcesPage() {
+  const { t } = useTranslation()
   const { connected, account, accountStatus, balances, connect, connecting, transact, getPermission, refreshAccountInfo } = useWalletStore()
 
   const [activeTab, setActiveTab] = useState<Tab>('cpu')
@@ -108,13 +110,13 @@ export default function ResourcesPage() {
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-        setError('请输入有效数量')
+        setError(t('resources.invalidAmount'))
         return
     }
 
     const permission = getPermission()
     if (!permission) {
-        setError('无法获取权限')
+        setError(t('resources.noPermission'))
         return
     }
 
@@ -184,24 +186,61 @@ export default function ResourcesPage() {
 
         const result = await transact(actions)
         setSuccess({
-            message: '操作成功！',
+            message: t('resources.operationSuccess'),
             txId: result.transaction_id
         })
         setAmount('')
 
     } catch (err) {
-        setError(err instanceof Error ? err.message : '操作失败')
+        setError(err instanceof Error ? err.message : t('resources.operationFailed'))
     } finally {
         setLoading(false)
     }
+  }
+
+  // 获取按钮文本
+  const getButtonText = () => {
+    if (!connected) return t('resources.pleaseConnectWallet')
+    if (activeTab === 'ram') {
+      return action === 'stake' ? t('resources.buyRam') : t('resources.sellRam')
+    }
+    if (activeTab === 'cpu') {
+      return action === 'stake' ? t('resources.stakeCpu') : t('resources.unstakeCpu')
+    }
+    return action === 'stake' ? t('resources.stakeNet') : t('resources.unstakeNet')
+  }
+
+  // 获取可用标签
+  const getAvailableLabel = () => {
+    if (action === 'stake') return t('resources.availableBalance')
+    if (activeTab === 'ram') return t('resources.sellableRam')
+    return activeTab === 'cpu' ? t('resources.stakedCpu') : t('resources.stakedNet')
+  }
+
+  // 获取输入标签
+  const getInputLabel = () => {
+    if (activeTab === 'ram') {
+      return action === 'stake' ? t('resources.buyRamBytes') : t('resources.sellRamBytes')
+    }
+    return action === 'stake' ? t('resources.stakeAmount') : t('resources.unstakeAmount')
+  }
+
+  // 获取信息文本
+  const getInfoText = () => {
+    if (activeTab === 'cpu' && action === 'stake') return t('resources.cpuStakeInfo')
+    if (activeTab === 'cpu' && action === 'unstake') return t('resources.cpuUnstakeInfo')
+    if (activeTab === 'net' && action === 'stake') return t('resources.netStakeInfo')
+    if (activeTab === 'net' && action === 'unstake') return t('resources.netUnstakeInfo')
+    if (activeTab === 'ram' && action === 'stake') return t('resources.ramBuyInfo')
+    return t('resources.ramSellInfo')
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">资源管理</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">管理您的 CPU、NET 和 RAM 资源</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('resources.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('resources.subtitle')}</p>
       </div>
 
       {/* Resource Overview */}
@@ -227,7 +266,7 @@ export default function ResourcesPage() {
             />
           </div>
           <div className="text-xs text-slate-400 mt-2">
-             {accountStatus ? `可用: ${formatTime(accountStatus.cpu.available)}` : '未连接'}
+             {accountStatus ? `${t('resources.available')}: ${formatTime(accountStatus.cpu.available)}` : t('resources.notConnected')}
           </div>
         </div>
 
@@ -252,7 +291,7 @@ export default function ResourcesPage() {
             />
           </div>
           <div className="text-xs text-slate-400 mt-2">
-             {accountStatus ? `可用: ${formatBytes(accountStatus.net.available)}` : '未连接'}
+             {accountStatus ? `${t('resources.available')}: ${formatBytes(accountStatus.net.available)}` : t('resources.notConnected')}
           </div>
         </div>
 
@@ -277,7 +316,7 @@ export default function ResourcesPage() {
             />
           </div>
           <div className="text-xs text-slate-400 mt-2">
-             {accountStatus ? `可用: ${formatBytes(accountStatus.ram.available)}` : '未连接'}
+             {accountStatus ? `${t('resources.available')}: ${formatBytes(accountStatus.ram.available)}` : t('resources.notConnected')}
           </div>
         </div>
       </div>
@@ -317,7 +356,7 @@ export default function ResourcesPage() {
                 )}
               >
                 <ArrowUp className="w-4 h-4" />
-                抵押
+                {t('resources.stakeAction')}
               </button>
               <button
                 onClick={() => setAction('unstake')}
@@ -329,7 +368,7 @@ export default function ResourcesPage() {
                 )}
               >
                 <ArrowDown className="w-4 h-4" />
-                赎回
+                {t('resources.unstakeAction')}
               </button>
             </div>
           )}
@@ -347,7 +386,7 @@ export default function ResourcesPage() {
                 )}
               >
                 <ArrowUp className="w-4 h-4" />
-                购买
+                {t('resources.buyAction')}
               </button>
               <button
                 onClick={() => setAction('unstake')}
@@ -359,7 +398,7 @@ export default function ResourcesPage() {
                 )}
               >
                 <ArrowDown className="w-4 h-4" />
-                出售
+                {t('resources.sellAction')}
               </button>
             </div>
           )}
@@ -367,7 +406,7 @@ export default function ResourcesPage() {
           {/* Amount Input */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              {activeTab === 'ram' ? (action === 'stake' ? '购买数量 (Bytes)' : '出售数量 (Bytes)') : (action === 'stake' ? '抵押金额 (FO)' : '赎回金额 (FO)')}
+              {getInputLabel()}
             </label>
             <div className="relative">
               <input
@@ -381,11 +420,11 @@ export default function ResourcesPage() {
                 onClick={setMax}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 dark:text-cyan-400 font-medium hover:underline"
               >
-                最大值
+                {t('resources.maxAmount')}
               </button>
             </div>
             <div className="flex justify-between text-xs text-slate-400 mt-2">
-              <span>{action === 'stake' ? '可用余额' : (activeTab === 'ram' ? '可出售RAM' : `已抵押${activeTab.toUpperCase()}`)}</span>
+              <span>{getAvailableLabel()}</span>
               <span>{getAvailable()}</span>
             </div>
           </div>
@@ -394,13 +433,13 @@ export default function ResourcesPage() {
           {action === 'stake' && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                接收账户 <span className="text-slate-400 font-normal">(可选，默认为自己)</span>
+                {t('resources.receiverAccount')} <span className="text-slate-400 font-normal">{t('resources.receiverOptional')}</span>
               </label>
               <input
                 type="text"
                 value={receiver}
                 onChange={(e) => setReceiver(e.target.value)}
-                placeholder="输入 FIBOS 账户名"
+                placeholder={t('resources.receiverHint')}
                 className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
             </div>
@@ -411,12 +450,7 @@ export default function ResourcesPage() {
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-slate-600 dark:text-slate-300">
-                {activeTab === 'cpu' && action === 'stake' && '抵押 FO 可获得 CPU 资源，用于执行智能合约操作。CPU 资源每24小时自动恢复。'}
-                {activeTab === 'cpu' && action === 'unstake' && '赎回 CPU 需要 3 天等待期，期间资源仍可使用。到期后可以取回 FO。'}
-                {activeTab === 'net' && action === 'stake' && '抵押 FO 可获得 NET 资源，用于网络带宽。NET 资源每24小时自动恢复。'}
-                {activeTab === 'net' && action === 'unstake' && '赎回 NET 需要 3 天等待期，期间资源仍可使用。到期后可以取回 FO。'}
-                {activeTab === 'ram' && action === 'stake' && 'RAM 用于存储账户数据。购买 RAM 是立即生效的市场交易，价格随供需波动。'}
-                {activeTab === 'ram' && action === 'unstake' && '出售 RAM 可立即获得 FO，但会失去对应的存储空间。请确保账户数据已迁移。'}
+                {getInfoText()}
               </div>
             </div>
           </div>
@@ -445,7 +479,7 @@ export default function ResourcesPage() {
             )}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            {!connected ? "请先连接钱包" : (activeTab === 'ram' ? (action === 'stake' ? '购买 RAM' : '出售 RAM') : (action === 'stake' ? `抵押 ${activeTab.toUpperCase()}` : `赎回 ${activeTab.toUpperCase()}`))}
+            {getButtonText()}
           </button>
         </div>
       </div>
@@ -453,19 +487,19 @@ export default function ResourcesPage() {
       {/* Pending Refunds */}
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">待赎回</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('resources.pendingRefunds')}</h2>
           <button
             onClick={() => refreshAccountInfo()}
             className="text-sm text-purple-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
           >
             <RefreshCw className="w-4 h-4" />
-            刷新
+            {t('resources.refresh')}
           </button>
         </div>
         <div className="text-center py-8 text-slate-400 text-sm">
           {accountStatus && accountStatus.refunding > 0 ? (
              <div className="text-lg text-slate-900 dark:text-white">{accountStatus.refunding.toFixed(4)} FO</div>
-          ) : "暂无待赎回的资源"}
+          ) : t('resources.noPendingRefunds')}
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { UserPlus, Key, CheckCircle, AlertCircle, Info, Wallet, Loader2, Refresh
 import { cn } from '@/lib/utils'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
+import { useTranslation } from '@/lib/i18n'
 
 /**
  * 创建账户页面
@@ -22,6 +23,7 @@ import { TransactionSuccess } from '@/components/features/TransactionSuccess'
  */
 
 export default function CreateAccountPage() {
+  const { t } = useTranslation()
   const { connected, account, connect, transact, getPermission } = useWalletStore()
 
   const [accountName, setAccountName] = useState('')
@@ -142,7 +144,7 @@ export default function CreateAccountPage() {
 
     const permission = getPermission()
     if (!permission) {
-        setError('无法获取权限')
+        setError(t('createAccount.errorNoPermission'))
         return
     }
 
@@ -198,7 +200,7 @@ export default function CreateAccountPage() {
         ])
 
         setSuccess({
-            message: `账户 ${accountName} 创建成功！`,
+            message: t('createAccount.successMessage').replace('{name}', accountName),
             txId: result.transaction_id
         })
         setAccountName('')
@@ -209,7 +211,7 @@ export default function CreateAccountPage() {
         setIsValidActiveKey(null)
 
     } catch (err) {
-        setError(err instanceof Error ? err.message : '创建账户失败')
+        setError(err instanceof Error ? err.message : t('createAccount.errorFailed'))
     } finally {
         setCreating(false)
     }
@@ -221,8 +223,8 @@ export default function CreateAccountPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">创建账户</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">为他人创建新的 FIBOS 账户</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('createAccount.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('createAccount.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -230,7 +232,7 @@ export default function CreateAccountPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Creator Account - 来自 ironman.getIdentity() */}
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">创建者账户</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('createAccount.creatorAccount')}</h2>
             <div className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-slate-800 rounded-xl">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-purple-500" />
@@ -240,28 +242,28 @@ export default function CreateAccountPage() {
                     <div className="text-slate-900 dark:text-white font-mono">{account.name}</div>
                 ) : (
                     <button onClick={() => connect()} className="text-purple-600 text-sm hover:underline">
-                        点击连接钱包
+                        {t('createAccount.clickToConnect')}
                     </button>
                 )}
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2">创建账户需要消耗创建者的 FO 代币</p>
+            <p className="text-xs text-slate-400 mt-2">{t('createAccount.creatorCost')}</p>
           </div>
 
           {/* Account Name */}
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">新账户信息</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('createAccount.newAccountInfo')}</h2>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                账户名
+                {t('createAccount.accountName')}
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={accountName}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="输入12位账户名"
+                  placeholder={t('createAccount.accountPlaceholder')}
                   maxLength={12}
                   className={cn(
                     'w-full h-12 px-4 pr-32 bg-slate-100 dark:bg-slate-800 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all',
@@ -277,7 +279,7 @@ export default function CreateAccountPage() {
                     className="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded flex items-center gap-1 transition-colors"
                   >
                     <RefreshCw className="w-3 h-3" />
-                    随机
+                    {t('createAccount.random')}
                   </button>
                 </div>
               </div>
@@ -287,12 +289,12 @@ export default function CreateAccountPage() {
                   nameAvailable === true ? 'text-emerald-500' : 'text-slate-400'
                 )}>
                   {isValidName === false
-                    ? '账户名必须是12位，仅包含小写字母 a-z 和数字 1-5'
+                    ? t('createAccount.invalidNameFormat')
                     : nameAvailable === false
-                    ? '该账户名已被注册'
+                    ? t('createAccount.nameTaken')
                     : nameAvailable === true
-                    ? '该账户名可用'
-                    : '12位小写字母(a-z)和数字(1-5)的组合'}
+                    ? t('createAccount.nameAvailable')
+                    : t('createAccount.nameHint')}
                 </span>
                 <span className="text-slate-400">{accountName.length}/12</span>
               </div>
@@ -301,21 +303,21 @@ export default function CreateAccountPage() {
 
           {/* Public Keys - 用户输入，不生成 */}
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">公钥设置</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('createAccount.keySettings')}</h2>
 
             {/* Owner Public Key */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-4 h-4 text-amber-500" />
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Owner 公钥</label>
-                <span className="text-xs text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">主权限</span>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('createAccount.ownerKey')}</label>
+                <span className="text-xs text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">{t('createAccount.ownerPermission')}</span>
               </div>
               <div className="relative">
                 <input
                   type="text"
                   value={ownerKey}
                   onChange={(e) => handleOwnerKeyChange(e.target.value)}
-                  placeholder="输入 Owner 公钥 (FO...)"
+                  placeholder={t('createAccount.keyPlaceholder')}
                   className={cn(
                     'w-full h-12 px-4 pr-12 bg-slate-100 dark:bg-slate-800 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all font-mono text-sm',
                     isValidOwnerKey === true && 'border-emerald-500 focus:ring-emerald-500/50',
@@ -329,7 +331,7 @@ export default function CreateAccountPage() {
                 </div>
               </div>
               {isValidOwnerKey === false && (
-                <p className="text-xs text-red-500 mt-2">请输入有效的 FIBOS 公钥（以 FO 开头）</p>
+                <p className="text-xs text-red-500 mt-2">{t('createAccount.invalidKey')}</p>
               )}
             </div>
 
@@ -337,15 +339,15 @@ export default function CreateAccountPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-4 h-4 text-cyan-500" />
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Active 公钥</label>
-                <span className="text-xs text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded">操作权限</span>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('createAccount.activeKey')}</label>
+                <span className="text-xs text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded">{t('createAccount.activePermission')}</span>
               </div>
               <div className="relative">
                 <input
                   type="text"
                   value={activeKey}
                   onChange={(e) => handleActiveKeyChange(e.target.value)}
-                  placeholder="输入 Active 公钥 (FO...)"
+                  placeholder={t('createAccount.keyPlaceholder')}
                   className={cn(
                     'w-full h-12 px-4 pr-12 bg-slate-100 dark:bg-slate-800 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all font-mono text-sm',
                     isValidActiveKey === true && 'border-emerald-500 focus:ring-emerald-500/50',
@@ -359,20 +361,20 @@ export default function CreateAccountPage() {
                 </div>
               </div>
               {isValidActiveKey === false && (
-                <p className="text-xs text-red-500 mt-2">请输入有效的 FIBOS 公钥（以 FO 开头）</p>
+                <p className="text-xs text-red-500 mt-2">{t('createAccount.invalidKey')}</p>
               )}
             </div>
           </div>
 
           {/* Initial Resources - 默认值来自老项目 */}
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">初始资源</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('createAccount.initialResources')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* RAM - 默认 4096 bytes */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  RAM (Bytes)
+                  {t('createAccount.ramBytes')}
                 </label>
                 <input
                   type="text"
@@ -386,7 +388,7 @@ export default function CreateAccountPage() {
               {/* CPU - 默认 0.1 FO */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  CPU (FO)
+                  {t('createAccount.cpuStake')}
                 </label>
                 <input
                   type="text"
@@ -400,7 +402,7 @@ export default function CreateAccountPage() {
               {/* NET - 默认 0.1 FO */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  NET (FO)
+                  {t('createAccount.netStake')}
                 </label>
                 <input
                   type="text"
@@ -413,8 +415,8 @@ export default function CreateAccountPage() {
             </div>
 
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              预计费用: <span className="font-medium text-slate-900 dark:text-white">~{(parseFloat(cpuAmount) + parseFloat(netAmount) + 0.05).toFixed(4)} FO</span>
-              <span className="text-xs text-slate-400 ml-2">(RAM + CPU + NET 抵押)</span>
+              {t('createAccount.estimatedCost')}: <span className="font-medium text-slate-900 dark:text-white">~{(parseFloat(cpuAmount) + parseFloat(netAmount) + 0.05).toFixed(4)} FO</span>
+              <span className="text-xs text-slate-400 ml-2">{t('createAccount.costNote')}</span>
             </div>
           </div>
 
@@ -444,7 +446,7 @@ export default function CreateAccountPage() {
             )}
           >
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-            {creating ? '创建中...' : '创建账户'}
+            {creating ? t('createAccount.creating') : t('createAccount.create')}
           </button>
         </div>
 
@@ -455,9 +457,9 @@ export default function CreateAccountPage() {
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">如何获取公钥</h3>
+                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">{t('createAccount.howToGetKey')}</h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  跳转工具网站生成：
+                  {t('createAccount.keyToolLink')}:
                   <a
                     href="https://eosio-key.github.io/eos-key"
                     target="_blank"
@@ -470,16 +472,16 @@ export default function CreateAccountPage() {
                 <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <p className="text-sm font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
-                    重要提示：请务必保管好您的私钥！
+                    {t('createAccount.securityWarning')}
                   </p>
                   <p className="text-xs text-red-500 dark:text-red-400 mt-1 leading-relaxed">
-                    私钥是您账户资金安全的唯一凭证。
+                    {t('createAccount.securityWarningText1')}
                     <br />
-                    • <strong>一旦丢失，无法找回</strong>，您将永久失去账户控制权。
+                    • <strong>{t('createAccount.securityWarningText2')}</strong>
                     <br />
-                    • <strong>一旦泄露，资产将不保</strong>，任何人拿到私钥都能转移您的资产。
+                    • <strong>{t('createAccount.securityWarningText3')}</strong>
                     <br />
-                    请务必<strong>离线备份</strong>（如抄写在纸上），切勿截图、拍照或通过网络发送给任何人。
+                    {t('createAccount.securityWarningText4')}
                   </p>
                 </div>
               </div>
@@ -490,28 +492,28 @@ export default function CreateAccountPage() {
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-900 dark:text-white">账户名规则</span>
+              <span className="text-sm font-medium text-slate-900 dark:text-white">{t('createAccount.rules')}</span>
             </div>
             <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">•</span>
-                必须正好 12 个字符
+                {t('createAccount.rule1')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">•</span>
-                只能包含小写字母 a-z
+                {t('createAccount.rule2')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">•</span>
-                只能包含数字 1-5
+                {t('createAccount.rule3')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">•</span>
-                不能使用数字 0, 6, 7, 8, 9
+                {t('createAccount.rule4')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">•</span>
-                账户名创建后不可更改
+                {t('createAccount.rule5')}
               </li>
             </ul>
           </div>
@@ -520,16 +522,16 @@ export default function CreateAccountPage() {
           <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
             <div className="flex items-center gap-2 mb-3">
               <Key className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-900 dark:text-white">公钥说明</span>
+              <span className="text-sm font-medium text-slate-900 dark:text-white">{t('createAccount.keyInfo')}</span>
             </div>
             <div className="text-sm text-slate-600 dark:text-slate-300 space-y-3">
               <div>
-                <span className="font-medium text-amber-500">Owner 公钥</span>
-                <p className="text-slate-400 mt-1">最高权限，用于修改账户权限。对应的私钥请离线保管。</p>
+                <span className="font-medium text-amber-500">{t('createAccount.ownerKey')}</span>
+                <p className="text-slate-400 mt-1">{t('createAccount.ownerKeyDesc')}</p>
               </div>
               <div>
-                <span className="font-medium text-cyan-500">Active 公钥</span>
-                <p className="text-slate-400 mt-1">日常操作权限，用于转账、投票等。对应的私钥可导入钱包使用。</p>
+                <span className="font-medium text-cyan-500">{t('createAccount.activeKey')}</span>
+                <p className="text-slate-400 mt-1">{t('createAccount.activeKeyDesc')}</p>
               </div>
             </div>
           </div>
@@ -539,11 +541,11 @@ export default function CreateAccountPage() {
             <div className="flex gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-1">注意事项</h3>
+                <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-1">{t('createAccount.warning')}</h3>
                 <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-                  <li>• 创建账户需要消耗您的 FO</li>
-                  <li>• 请确保公钥输入正确</li>
-                  <li>• 账户创建后无法撤销</li>
+                  <li>• {t('createAccount.warningText1')}</li>
+                  <li>• {t('createAccount.warningText2')}</li>
+                  <li>• {t('createAccount.warningText3')}</li>
                 </ul>
               </div>
             </div>

@@ -5,8 +5,10 @@ import { Send, Wallet, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 export default function TransferPage() {
+  const { t } = useTranslation()
   const { connected, account, accountStatus, balances, connect, connecting, transact, getPermission } = useWalletStore()
 
   const [to, setTo] = useState('')
@@ -43,29 +45,29 @@ export default function TransferPage() {
   // 发送转账
   const handleTransfer = async () => {
     if (!connected || !account) {
-      setError('请先连接钱包')
+      setError(t('transfer.errorConnectFirst'))
       return
     }
 
     if (!to || !isValidAccountName(to)) {
-      setError('请输入有效的收款账户名')
+      setError(t('transfer.errorInvalidAccount'))
       return
     }
 
     const amountNum = parseFloat(amount)
     if (isNaN(amountNum) || amountNum <= 0) {
-      setError('请输入有效的转账金额')
+      setError(t('transfer.errorInvalidAmount'))
       return
     }
 
     if (amountNum > parseFloat(availableBalance)) {
-      setError('余额不足')
+      setError(t('transfer.errorInsufficientBalance'))
       return
     }
 
     const permission = getPermission()
     if (!permission) {
-      setError('无法获取账户权限')
+      setError(t('transfer.errorNoPermission'))
       return
     }
 
@@ -90,14 +92,14 @@ export default function TransferPage() {
       }])
 
       setSuccess({
-        message: '转账成功！',
+        message: t('success.transfer'),
         txId: result.transaction_id
       })
       setTo('')
       setAmount('')
       setMemo('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '转账失败')
+      setError(err instanceof Error ? err.message : t('transfer.errorTransferFailed'))
     } finally {
       setSending(false)
     }
@@ -107,8 +109,8 @@ export default function TransferPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">转账</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">向其他账户发送代币</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('transfer.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('transfer.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -118,7 +120,7 @@ export default function TransferPage() {
             {/* From Account */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                从账户
+                {t('transfer.fromAccount')}
               </label>
               <div className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-slate-800 rounded-xl">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
@@ -136,7 +138,7 @@ export default function TransferPage() {
                       disabled={connecting}
                       className="text-purple-600 dark:text-cyan-400 text-sm hover:underline"
                     >
-                      {connecting ? '连接中...' : '点击连接钱包'}
+                      {connecting ? t('common.connecting') : t('transfer.clickToConnect')}
                     </button>
                   )}
                 </div>
@@ -146,22 +148,22 @@ export default function TransferPage() {
             {/* To Account */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                收款账户
+                {t('transfer.recipient')}
               </label>
               <input
                 type="text"
                 value={to}
                 onChange={(e) => setTo(e.target.value.toLowerCase())}
-                placeholder="输入 FIBOS 账户名"
+                placeholder={t('transfer.recipientHint')}
                 className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
-              <p className="text-xs text-slate-400 mt-2">账户名为 12 位小写字母和数字 1-5 的组合</p>
+              <p className="text-xs text-slate-400 mt-2">{t('transfer.accountNameRule')}</p>
             </div>
 
             {/* Amount */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                转账金额
+                {t('transfer.transferAmount')}
               </label>
               <div className="flex gap-3">
                 <div className="flex-1 relative">
@@ -176,7 +178,7 @@ export default function TransferPage() {
                     onClick={setMaxAmount}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 dark:text-cyan-400 font-medium hover:underline"
                   >
-                    全部
+                    {t('transfer.max')}
                   </button>
                 </div>
                 {/* Token Select */}
@@ -216,7 +218,7 @@ export default function TransferPage() {
                 </div>
               </div>
               <div className="flex justify-between text-xs text-slate-400 mt-2">
-                <span>可用余额</span>
+                <span>{t('transfer.availableBalance')}</span>
                 <span>{availableBalance} {selectedToken}</span>
               </div>
             </div>
@@ -224,13 +226,13 @@ export default function TransferPage() {
             {/* Memo */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                备注 <span className="text-slate-400 font-normal">(可选)</span>
+                {t('transfer.memo')} <span className="text-slate-400 font-normal">{t('transfer.memoOptional')}</span>
               </label>
               <input
                 type="text"
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
-                placeholder="输入转账备注"
+                placeholder={t('transfer.memoHint')}
                 className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
             </div>
@@ -263,12 +265,12 @@ export default function TransferPage() {
               {sending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  发送中...
+                  {t('transfer.sending')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  确认转账
+                  {t('transfer.confirmTransfer')}
                 </>
               )}
             </button>
@@ -283,7 +285,7 @@ export default function TransferPage() {
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-purple-500" />
               </div>
-              <span className="text-sm text-slate-500 dark:text-slate-400">可用余额</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">{t('transfer.availableBalance')}</span>
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
               {connected ? (accountStatus?.balance || '0 FO') : '0 FO'}
@@ -295,11 +297,11 @@ export default function TransferPage() {
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-slate-600 dark:text-slate-300">
-                <p className="mb-2">转账说明：</p>
+                <p className="mb-2">{t('transfer.transferInfo')}</p>
                 <ul className="text-slate-400 space-y-1">
-                  <li>• 转账需要消耗 CPU 和 NET 资源</li>
-                  <li>• 请确认收款账户名正确</li>
-                  <li>• 转账后不可撤销</li>
+                  <li>• {t('transfer.transferRule1')}</li>
+                  <li>• {t('transfer.transferRule2')}</li>
+                  <li>• {t('transfer.transferRule3')}</li>
                 </ul>
               </div>
             </div>

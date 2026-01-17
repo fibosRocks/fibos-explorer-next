@@ -7,12 +7,14 @@ import { Collapsible } from '@/components/ui/collapsible'
 import * as apiClient from '@/lib/services/api-client'
 import type { ProducerVoter } from '@/lib/services/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface ProducerVotersProps {
   accountName: string
 }
 
 export function ProducerVoters({ accountName }: ProducerVotersProps) {
+  const { t } = useTranslation()
   const [totalVotes, setTotalVotes] = useState<number>(0)
   const [voters, setVoters] = useState<ProducerVoter[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,17 +89,17 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
 
   return (
     <Collapsible
-      title="节点得票详情"
+      title={t('account.producerVotes')}
       badge={`${(totalVotes / 10000).toFixed(4)} FO`}
       defaultOpen={false}
     >
       <div className="bg-slate-50 dark:bg-slate-900/20">
         {/* Header */}
         <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-slate-200/50 dark:border-white/10 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="col-span-4">投票人</div>
-          <div className="col-span-3 text-right">抵押</div>
-          <div className="col-span-3 text-right">票数权重</div>
-          <div className="col-span-2 text-center">代理</div>
+          <div className="col-span-4">{t('account.voter')}</div>
+          <div className="col-span-3 text-right">{t('account.staked')}</div>
+          <div className="col-span-3 text-right">{t('account.voteWeight')}</div>
+          <div className="col-span-2 text-center">{t('account.isProxy')}</div>
         </div>
 
         {/* List */}
@@ -118,7 +120,7 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
               <div className="col-span-2 flex justify-center">
                 {voter.is_proxy ? (
                   <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-                    是
+                    {t('account.yes')}
                   </span>
                 ) : (
                   <span className="text-slate-300 dark:text-slate-600">-</span>
@@ -139,12 +141,12 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
               {loadingMore ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  加载中...
+                  {t('common.loading')}
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-4 h-4" />
-                  加载更多
+                  {t('common.loadMore')}
                 </>
               )}
             </button>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { parseSearchQuery } from '@/lib/utils/search'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface NavbarSearchProps {
   className?: string
@@ -15,9 +16,12 @@ interface NavbarSearchProps {
 
 export function NavbarSearch({
   className,
-  placeholder = '搜索区块、交易、账户...',
+  placeholder,
   mode = 'full'
 }: NavbarSearchProps) {
+  const { t } = useTranslation()
+  const finalPlaceholder = placeholder || t('search.placeholder')
+
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
@@ -59,7 +63,7 @@ export function NavbarSearch({
             'w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors',
             className
           )}
-          aria-label="搜索"
+          aria-label={t('search.ariaLabel')}
         >
           <Search className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         </button>
@@ -82,7 +86,7 @@ export function NavbarSearch({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={placeholder}
+                  placeholder={finalPlaceholder}
                   className="w-full h-12 pl-12 pr-12 bg-transparent text-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                 />
                 <button
@@ -93,8 +97,8 @@ export function NavbarSearch({
                 </button>
               </div>
               <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex justify-between">
-                <span>支持搜索：区块高度、交易哈希、账户名、公钥</span>
-                <span className="font-mono">ESC 关闭</span>
+                <span>{t('search.support')}</span>
+                <span className="font-mono">{t('search.esc')}</span>
               </div>
             </div>
           </div>,
@@ -119,7 +123,7 @@ export function NavbarSearch({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={finalPlaceholder}
           className={cn(
             'w-full h-10 pl-10 pr-4 rounded-xl',
             'bg-slate-100 dark:bg-slate-800/50',

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Check, X, Play, Trash2, Shield, Loader2, AlertCircle, Search, ChevronDown, ChevronRight } from 'lucide-react'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
+import { useTranslation } from '@/lib/i18n'
 
 type MsigAction = 'approve' | 'unapprove' | 'exec' | 'cancel'
 
@@ -29,6 +30,7 @@ interface ProposalData {
 }
 
 function MultisigContent() {
+  const { t } = useTranslation()
   const { connected, account, connect, transact, getPermission } = useWalletStore()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -70,7 +72,7 @@ function MultisigContent() {
     const targetProposalName = searchProposalName ?? proposalName
 
     if (!targetProposer) {
-        setError('请输入提案人账户')
+        setError(t('multisig.errorNoProposer'))
         return
     }
 
@@ -100,7 +102,7 @@ function MultisigContent() {
             }),
         })
 
-        if (!approvalsResponse.ok) throw new Error('查询失败')
+        if (!approvalsResponse.ok) throw new Error(t('multisig.errorQueryFailed'))
         const approvalsData = await approvalsResponse.json()
 
         let rows = approvalsData.rows || []
@@ -111,7 +113,7 @@ function MultisigContent() {
         }
 
         if (rows.length === 0) {
-            setError('未找到提案')
+            setError(t('multisig.notFound'))
             setFetching(false)
             return
         }
@@ -181,11 +183,11 @@ function MultisigContent() {
 
         setProposalList(proposals)
     } catch (err) {
-        setError(err instanceof Error ? err.message : '查询失败')
+        setError(err instanceof Error ? err.message : t('multisig.errorQueryFailed'))
     } finally {
         setFetching(false)
     }
-  }, [proposer, proposalName, updateUrl])
+  }, [proposer, proposalName, updateUrl, t])
 
   // URL 参数变化时自动查询
   useEffect(() => {
@@ -210,13 +212,13 @@ function MultisigContent() {
     }
 
     if (!proposer) {
-        setError('请输入提案人账户')
+        setError(t('multisig.errorNoProposer'))
         return
     }
 
     const permission = getPermission()
     if (!permission) {
-        setError('无法获取权限')
+        setError(t('multisig.errorNoPermission'))
         return
     }
 
@@ -256,10 +258,10 @@ function MultisigContent() {
 
         let msg = ''
         switch(action) {
-            case 'approve': msg = '提案批准成功'; break;
-            case 'unapprove': msg = '已取消批准'; break;
-            case 'exec': msg = '提案执行成功'; break;
-            case 'cancel': msg = '提案已取消'; break;
+            case 'approve': msg = t('multisig.successApprove'); break;
+            case 'unapprove': msg = t('multisig.successUnapprove'); break;
+            case 'exec': msg = t('multisig.successExec'); break;
+            case 'cancel': msg = t('multisig.successCancel'); break;
         }
 
         setSuccess({
@@ -270,7 +272,7 @@ function MultisigContent() {
         // 刷新列表
         setTimeout(() => handleFetchProposal(), 1000)
     } catch (err) {
-        setError(err instanceof Error ? err.message : '操作失败')
+        setError(err instanceof Error ? err.message : t('multisig.errorActionFailed'))
     } finally {
         setLoading(false)
     }
@@ -280,24 +282,24 @@ function MultisigContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">多重签名</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">查看多重签名提案状态</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('multisig.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('multisig.subtitle')}</p>
       </div>
 
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">查询提案</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">{t('multisig.queryProposal')}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Proposer */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    提案人 (Proposer)
+                    {t('multisig.proposer')}
                 </label>
                 <input
                     type="text"
                     value={proposer}
                     onChange={(e) => setProposer(e.target.value.toLowerCase())}
-                    placeholder="输入提案账户名"
+                    placeholder={t('multisig.proposerPlaceholder')}
                     className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                 />
             </div>
@@ -305,14 +307,14 @@ function MultisigContent() {
             {/* Proposal Name */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    提案名称 (可选)
+                    {t('multisig.proposalNameOptional')}
                 </label>
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={proposalName}
                         onChange={(e) => setProposalName(e.target.value)}
-                        placeholder="留空查询所有提案"
+                        placeholder={t('multisig.proposalPlaceholder')}
                         className="flex-1 h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                     />
                     <button
@@ -321,7 +323,7 @@ function MultisigContent() {
                         className="h-12 px-4 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                         {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        查询
+                        {t('multisig.query')}
                     </button>
                 </div>
             </div>
@@ -357,7 +359,7 @@ function MultisigContent() {
                                     {proposal.proposal_name}
                                 </span>
                                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                                    完成度: {proposal.provided_approvals?.length || 0} / {proposal.status?.length || 0}
+                                    {t('multisig.progress')}: {proposal.provided_approvals?.length || 0} / {proposal.status?.length || 0}
                                 </span>
                             </div>
                             {/* 操作按钮暂时隐藏，等待 eosjs-classic-fibos 修复多签类型定义后取消 hidden */}
@@ -368,7 +370,7 @@ function MultisigContent() {
                                     className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-medium hover:bg-emerald-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
                                     <Check className="w-3.5 h-3.5" />
-                                    批准
+                                    {t('multisig.approve')}
                                 </button>
                                 <button
                                     onClick={() => handleAction('unapprove', proposal)}
@@ -376,7 +378,7 @@ function MultisigContent() {
                                     className="px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-lg text-sm font-medium hover:bg-amber-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
                                     <X className="w-3.5 h-3.5" />
-                                    撤销
+                                    {t('multisig.unapprove')}
                                 </button>
                                 <button
                                     onClick={() => handleAction('exec', proposal)}
@@ -384,7 +386,7 @@ function MultisigContent() {
                                     className="px-3 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 rounded-lg text-sm font-medium hover:bg-purple-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
                                     <Play className="w-3.5 h-3.5" />
-                                    执行
+                                    {t('multisig.execute')}
                                 </button>
                                 <button
                                     onClick={() => handleAction('cancel', proposal)}
@@ -392,7 +394,7 @@ function MultisigContent() {
                                     className="px-3 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
-                                    取消
+                                    {t('multisig.cancel')}
                                 </button>
                             </div>
                         </div>
@@ -411,7 +413,7 @@ function MultisigContent() {
                                         ) : (
                                             <ChevronRight className="w-4 h-4" />
                                         )}
-                                        交易详情
+                                        {t('multisig.txDetails')}
                                     </button>
                                     {proposal.open && (
                                         <div className="p-3 bg-slate-50 dark:bg-slate-900">
@@ -429,9 +431,9 @@ function MultisigContent() {
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b border-slate-200 dark:border-slate-700">
-                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">账户</th>
-                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">权限</th>
-                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">状态</th>
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">{t('multisig.account')}</th>
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">{t('multisig.permission')}</th>
+                                                <th className="text-left py-2 px-3 font-medium text-slate-600 dark:text-slate-400">{t('multisig.status')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -445,7 +447,7 @@ function MultisigContent() {
                                                                 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                                                                 : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                                                         }`}>
-                                                            {approval.status === 'approved' ? '已批准' : '待批准'}
+                                                            {approval.status === 'approved' ? t('multisig.approved') : t('multisig.unapproved')}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -463,10 +465,10 @@ function MultisigContent() {
         <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-2 mb-2 font-medium text-slate-700 dark:text-slate-300">
                 <Shield className="w-4 h-4" />
-                说明
+                {t('multisig.info')}
             </div>
-            <p>输入提案人账户名查询其发起的多签提案，可查看提案的批准进度和状态。</p>
-            <p className="mt-2 text-amber-600 dark:text-amber-400">注: 批准/撤销/执行/取消操作暂不可用，待底层库修复后开放。</p>
+            <p>{t('multisig.infoText')}</p>
+            <p className="mt-2 text-amber-600 dark:text-amber-400">{t('multisig.notAvailable')}</p>
         </div>
       </div>
     </div>

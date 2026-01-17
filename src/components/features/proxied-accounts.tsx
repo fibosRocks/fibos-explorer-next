@@ -6,6 +6,7 @@ import { Users, ChevronDown, Loader2 } from 'lucide-react'
 import { Collapsible } from '@/components/ui/collapsible'
 import * as apiClient from '@/lib/services/api-client'
 import type { ProxiedAccount } from '@/lib/services/types'
+import { useTranslation } from '@/lib/i18n'
 
 interface ProxiedAccountsProps {
   accountName: string
@@ -13,6 +14,7 @@ interface ProxiedAccountsProps {
 }
 
 export function ProxiedAccounts({ accountName, isProxy }: ProxiedAccountsProps) {
+  const { t } = useTranslation()
   const [accounts, setAccounts] = useState<ProxiedAccount[]>([])
   const [proxiedVote, setProxiedVote] = useState<number>(0)
   const [loading, setLoading] = useState(true)
@@ -98,21 +100,21 @@ export function ProxiedAccounts({ accountName, isProxy }: ProxiedAccountsProps) 
 
   return (
     <Collapsible
-      title="被代理账户"
+      title={t('account.proxiedAccounts')}
       badge={`${displayVote.toFixed(4)} FO`}
       defaultOpen={false}
     >
       <div className="bg-slate-50 dark:bg-slate-900/20">
         {/* Header */}
         <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-slate-200/50 dark:border-white/10 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="col-span-5">账户</div>
-          <div className="col-span-4 text-right">抵押</div>
-          <div className="col-span-3 text-right">票数权重</div>
+          <div className="col-span-5">{t('multisig.account')}</div>
+          <div className="col-span-4 text-right">{t('account.staked')}</div>
+          <div className="col-span-3 text-right">{t('account.voteWeight')}</div>
         </div>
 
         {/* List */}
         {accounts.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">暂无被代理账户</div>
+          <div className="p-8 text-center text-slate-500">{t('account.noProxiedAccounts')}</div>
         ) : (
           <div className="divide-y divide-slate-200/50 dark:divide-white/10">
             {accounts.map((account, index) => (
@@ -150,12 +152,12 @@ export function ProxiedAccounts({ accountName, isProxy }: ProxiedAccountsProps) 
               {loadingMore ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  加载中...
+                  {t('common.loading')}
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-4 h-4" />
-                  加载更多
+                  {t('common.loadMore')}
                 </>
               )}
             </button>

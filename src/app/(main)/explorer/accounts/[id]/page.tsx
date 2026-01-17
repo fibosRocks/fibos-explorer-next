@@ -1,17 +1,17 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { User, Wallet, Cpu, HardDrive, Wifi, Clock, Vote, Coins, Key } from 'lucide-react'
+import { User, Wallet, Cpu, HardDrive, Wifi, Clock, Vote, Coins, Key, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
 import type { Account } from '@/lib/services/types'
 import { Collapsible } from '@/components/ui/collapsible'
 import { AccountTraces } from '@/components/features/account-traces'
 import { ProducerVoters } from '@/components/features/producer-voters'
 import { ProxiedAccounts } from '@/components/features/proxied-accounts'
-
-import { formatBytes, formatTime, formatPercent, formatBalance, formatPublicKey } from '@/lib/utils/format'
-
-interface PageProps {
-  params: Promise<{ id: string }>
-}
+import { formatBytes, formatTime, formatPublicKey } from '@/lib/utils/format'
+import { useTranslation } from '@/lib/i18n'
 
 // 辅助函数
 function getPercent(used: number, max: number): number {
@@ -25,39 +25,61 @@ function parseBalance(balance?: string): number {
   return parseFloat(parts[0] ?? '0') || 0
 }
 
-export default async function AccountPage({ params }: PageProps) {
-  const { id } = await params
+export default function AccountPage() {
+  const { t } = useTranslation()
+  const params = useParams()
+  const id = params.id as string
 
-  let account: Account | null = null
-  let balances: { quantity: string; contract: string }[] = []
-  let error: string | null = null
+  const [account, setAccount] = useState<Account | null>(null)
+  const [balances, setBalances] = useState<{ quantity: string; contract: string }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  try {
-    // 并行获取账户信息和代币余额
-    const [accountData, balanceRows] = await Promise.all([
-      eos.getAccount(id),
-      eos.getAccountBalances(id),
-    ])
-    account = accountData
-    balances = balanceRows.map((row) => ({
-      quantity: row.balance.quantity,
-      contract: row.balance.contract,
-    }))
-  } catch (err) {
-    console.error('获取账户数据失败:', err)
-    error = '账户不存在或获取数据失败'
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError(null)
+        const [accountData, balanceRows] = await Promise.all([
+          eos.getAccount(id),
+          eos.getAccountBalances(id),
+        ])
+        setAccount(accountData)
+        setBalances(balanceRows.map((row) => ({
+          quantity: row.balance.quantity,
+          contract: row.balance.contract,
+        })))
+      } catch (err) {
+        console.error('获取账户数据失败:', err)
+        setError(t('account.fetchError'))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      fetchData()
+    }
+  }, [id, t])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    )
   }
 
   if (error || !account) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
         <User className="w-12 h-12 mb-4 text-slate-300" />
-        <p>{error || '账户不存在'}</p>
+        <p>{error || t('account.notFound')}</p>
         <Link
           href="/"
           className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
-          返回首页
+          {t('common.backHome')}
         </Link>
       </div>
     )
@@ -95,7 +117,7 @@ export default async function AccountPage({ params }: PageProps) {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-mono">{id}</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">FIBOS 账户</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">{t('account.fibosAccount')}</p>
         </div>
       </div>
 
@@ -105,7 +127,7 @@ export default async function AccountPage({ params }: PageProps) {
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Wallet className="w-4 h-4 text-purple-500" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">总资产</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('account.totalAssets')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {totalBalance.toFixed(4)} FO
@@ -116,7 +138,7 @@ export default async function AccountPage({ params }: PageProps) {
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Wallet className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">可用余额</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('account.available')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {liquidBalance.toFixed(4)} FO
@@ -127,7 +149,7 @@ export default async function AccountPage({ params }: PageProps) {
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Vote className="w-4 h-4 text-blue-500" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">已抵押</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('account.staked')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {staked.toFixed(4)} FO
@@ -138,7 +160,7 @@ export default async function AccountPage({ params }: PageProps) {
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-amber-500" />
-            <span className="text-sm text-slate-500 dark:text-slate-400">待赎回</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{t('account.refunding')}</span>
           </div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
             {refundTotal.toFixed(4)} FO
@@ -148,14 +170,14 @@ export default async function AccountPage({ params }: PageProps) {
 
       {/* Resources */}
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">资源使用</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('account.resources')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* RAM */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <HardDrive className="w-4 h-4 text-purple-500" />
-                <span className="text-sm text-slate-600 dark:text-slate-300">RAM</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">{t('account.ram')}</span>
               </div>
               <span className="text-sm text-slate-500">{ramPercent.toFixed(1)}%</span>
             </div>
@@ -175,7 +197,7 @@ export default async function AccountPage({ params }: PageProps) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-cyan-500" />
-                <span className="text-sm text-slate-600 dark:text-slate-300">CPU</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">{t('account.cpu')}</span>
               </div>
               <span className="text-sm text-slate-500">{cpuPercent.toFixed(1)}%</span>
             </div>
@@ -195,7 +217,7 @@ export default async function AccountPage({ params }: PageProps) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Wifi className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-slate-600 dark:text-slate-300">NET</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">{t('account.net')}</span>
               </div>
               <span className="text-sm text-slate-500">{netPercent.toFixed(1)}%</span>
             </div>
@@ -216,13 +238,13 @@ export default async function AccountPage({ params }: PageProps) {
       {(votedProducers.length > 0 || proxy) && (
         <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
           <div className="p-5 border-b border-slate-200/50 dark:border-white/10">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">投票信息</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('account.voting')}</h2>
           </div>
           <div className="p-4">
             {proxy ? (
               <div>
                 <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                  已设置代理
+                  {t('account.proxy')}
                 </div>
                 <Link
                   href={`/explorer/accounts/${proxy}`}
@@ -234,7 +256,7 @@ export default async function AccountPage({ params }: PageProps) {
             ) : (
               <>
                 <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                  已投票给 {votedProducers.length} 个节点
+                  {t('account.votedNodes')} {votedProducers.length} {t('account.nodes')}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {votedProducers.map((producer) => (
@@ -261,7 +283,7 @@ export default async function AccountPage({ params }: PageProps) {
 
       {/* Tokens - Collapsible with Card Grid */}
       {balances.length > 0 && (
-        <Collapsible title="代币资产" badge={balances.length}>
+        <Collapsible title={t('account.tokens')} badge={balances.length}>
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {balances.map((token, index) => {
               const parts = token.quantity.split(' ')
@@ -294,7 +316,7 @@ export default async function AccountPage({ params }: PageProps) {
 
       {/* Permissions - Collapsible */}
       {account.permissions && account.permissions.length > 0 && (
-        <Collapsible title="权限" badge={account.permissions.length}>
+        <Collapsible title={t('account.permissions')} badge={account.permissions.length}>
           <div className="divide-y divide-slate-200/50 dark:divide-white/10">
             {account.permissions.map((perm) => (
               <div key={perm.perm_name} className="p-4">

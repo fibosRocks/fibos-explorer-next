@@ -15,25 +15,47 @@ import type {
   TransactionResponse,
 } from './types'
 
-const RPC_ENDPOINT = environment.blockchainUrl
+/**
+ * 判断是否在客户端环境
+ */
+const isClient = typeof window !== 'undefined'
 
 /**
  * 通用 RPC 请求函数
+ * 客户端使用 /api/rpc 代理，服务端直接调用
  */
 async function rpcRequest<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${RPC_ENDPOINT}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  if (isClient) {
+    // 客户端：通过 API 代理
+    const response = await fetch('/api/rpc', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ path, data: body }),
+    })
 
-  if (!response.ok) {
-    throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    if (!response.ok) {
+      throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    }
+
+    return response.json()
+  } else {
+    // 服务端：直接调用 RPC
+    const response = await fetch(`${environment.blockchainUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+
+    if (!response.ok) {
+      throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    }
+
+    return response.json()
   }
-
-  return response.json()
 }
 
 /**

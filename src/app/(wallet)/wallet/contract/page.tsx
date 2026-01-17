@@ -5,8 +5,10 @@ import { Code, Send, Play, AlertCircle, CheckCircle, Loader2 } from 'lucide-reac
 import { cn } from '@/lib/utils'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
+import { useTranslation } from '@/lib/i18n'
 
 export default function ContractPage() {
+  const { t } = useTranslation()
   const { connected, account, connect, transact, getPermission } = useWalletStore()
 
   const [contractName, setContractName] = useState('')
@@ -24,7 +26,7 @@ export default function ContractPage() {
     }
 
     if (!contractName || !actionName) {
-        setError('请输入合约名和 Action 名')
+        setError(t('contract.errorMissingFields'))
         return
     }
 
@@ -32,13 +34,13 @@ export default function ContractPage() {
     try {
         data = JSON.parse(jsonPayload)
     } catch (e) {
-        setError('JSON 数据格式错误')
+        setError(t('contract.errorInvalidJson'))
         return
     }
 
     const permission = getPermission()
     if (!permission) {
-        setError('无法获取权限')
+        setError(t('contract.errorNoPermission'))
         return
     }
 
@@ -55,11 +57,11 @@ export default function ContractPage() {
         }])
 
         setSuccess({
-            message: '交易发送成功！',
+            message: t('success.contract'),
             txId: result.transaction_id
         })
     } catch (err) {
-        setError(err instanceof Error ? err.message : '交易失败')
+        setError(err instanceof Error ? err.message : t('contract.errorFailed'))
     } finally {
         setLoading(false)
     }
@@ -69,8 +71,8 @@ export default function ContractPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">合约调用</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">直接调用智能合约接口执行操作</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('contract.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('contract.subtitle')}</p>
       </div>
 
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
@@ -78,13 +80,13 @@ export default function ContractPage() {
             {/* Contract Account */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    合约账户
+                    {t('contract.contractAccount')}
                 </label>
                 <input
                     type="text"
                     value={contractName}
                     onChange={(e) => setContractName(e.target.value.toLowerCase())}
-                    placeholder="例如: eosio.token"
+                    placeholder={t('contract.contractPlaceholder')}
                     className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
                 />
             </div>
@@ -92,13 +94,13 @@ export default function ContractPage() {
             {/* Action Name */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Action 名称
+                    {t('contract.action')}
                 </label>
                 <input
                     type="text"
                     value={actionName}
                     onChange={(e) => setActionName(e.target.value.toLowerCase())}
-                    placeholder="例如: transfer"
+                    placeholder={t('contract.actionPlaceholder')}
                     className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
                 />
             </div>
@@ -107,30 +109,30 @@ export default function ContractPage() {
         {/* JSON Data */}
         <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Action 数据 (JSON)
+                {t('contract.data')}
             </label>
             <textarea
                 value={jsonPayload}
                 onChange={(e) => setJsonPayload(e.target.value)}
-                placeholder='{ "key": "value" }'
+                placeholder={t('contract.dataPlaceholder')}
                 className="w-full h-64 px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono text-sm leading-relaxed"
                 spellCheck={false}
             />
-            <p className="text-xs text-slate-400 mt-2">请输入符合合约 ABI 定义的 JSON 参数</p>
+            <p className="text-xs text-slate-400 mt-2">{t('contract.dataHint')}</p>
         </div>
 
         {/* Permission Info */}
         <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                 <Code className="w-4 h-4" />
-                <span>授权: </span>
+                <span>{t('contract.authorization')}: </span>
                 <span className="font-mono font-medium text-slate-900 dark:text-white">
-                    {connected && account ? `${account.name}@${account.authority}` : '未连接'}
+                    {connected && account ? `${account.name}@${account.authority}` : t('common.notConnected')}
                 </span>
             </div>
             {!connected && (
                 <button onClick={() => connect()} className="text-sm text-purple-600 dark:text-cyan-400 hover:underline">
-                    连接钱包
+                    {t('common.connect')}
                 </button>
             )}
         </div>
@@ -162,7 +164,7 @@ export default function ContractPage() {
             )}
         >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            执行合约
+            {loading ? t('contract.executing') : t('contract.execute')}
         </button>
       </div>
     </div>

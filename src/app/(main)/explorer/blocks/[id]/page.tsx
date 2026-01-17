@@ -1,42 +1,65 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Box, Clock, Hash, User, Layers, CheckCircle, AlertCircle } from 'lucide-react'
+import { Box, Clock, Hash, User, Layers, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
 import type { Block } from '@/lib/services/types'
+import { useTranslation } from '@/lib/i18n'
 
-interface PageProps {
-  params: Promise<{ id: string }>
-}
+export default function BlockPage() {
+  const { t } = useTranslation()
+  const params = useParams()
+  const id = params.id as string
 
-export default async function BlockPage({ params }: PageProps) {
-  const { id } = await params
+  const [block, setBlock] = useState<Block | null>(null)
+  const [chainInfo, setChainInfo] = useState<{ last_irreversible_block_num: number } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  let block: Block | null = null
-  let chainInfo: { last_irreversible_block_num: number } | null = null
-  let error: string | null = null
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError(null)
+        const [blockData, info] = await Promise.all([
+          eos.getBlock(id),
+          eos.getInfo(),
+        ])
+        setBlock(blockData)
+        setChainInfo(info)
+      } catch (err) {
+        console.error('获取区块数据失败:', err)
+        setError(t('block.fetchError'))
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  try {
-    // 并行获取区块和链信息
-    const [blockData, info] = await Promise.all([
-      eos.getBlock(id),
-      eos.getInfo(),
-    ])
-    block = blockData
-    chainInfo = info
-  } catch (err) {
-    console.error('获取区块数据失败:', err)
-    error = '获取区块数据失败'
+    if (id) {
+      fetchData()
+    }
+  }, [id, t])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    )
   }
 
   if (error || !block) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
         <Box className="w-12 h-12 mb-4 text-slate-300" />
-        <p>{error || '区块不存在'}</p>
+        <p>{error || t('block.notFound')}</p>
         <Link
           href="/"
           className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
-          返回首页
+          {t('common.backHome')}
         </Link>
       </div>
     )
@@ -66,7 +89,7 @@ export default async function BlockPage({ params }: PageProps) {
           <Box className="w-7 h-7 text-blue-500" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">区块详情</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('block.title')}</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Block #{block.block_num.toLocaleString()}</p>
         </div>
       </div>
@@ -76,12 +99,12 @@ export default async function BlockPage({ params }: PageProps) {
         {isPending ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
             <AlertCircle className="w-4 h-4" />
-            待确认 (Pending)
+            {t('block.pendingStatus')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <CheckCircle className="w-4 h-4" />
-            已确认 (Irreversible)
+            {t('block.irreversible')}
           </span>
         )}
       </div>
@@ -89,7 +112,7 @@ export default async function BlockPage({ params }: PageProps) {
       {/* Block Info Card */}
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
         <div className="p-5 border-b border-slate-200/50 dark:border-white/10">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">基本信息</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('block.title')}</h2>
         </div>
 
         <div className="divide-y divide-slate-200/50 dark:divide-white/10">
@@ -97,7 +120,7 @@ export default async function BlockPage({ params }: PageProps) {
           <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400">
               <Hash className="w-4 h-4" />
-              区块号
+              {t('block.blockNumber')}
             </div>
             <div className="font-mono text-slate-900 dark:text-white">
               {block.block_num.toLocaleString()}
@@ -108,7 +131,7 @@ export default async function BlockPage({ params }: PageProps) {
           <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400 shrink-0">
               <Hash className="w-4 h-4" />
-              区块哈希
+              {t('block.blockHash')}
             </div>
             <div className="font-mono text-sm text-slate-900 dark:text-white break-all">
               {block.id}
@@ -119,7 +142,7 @@ export default async function BlockPage({ params }: PageProps) {
           <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400">
               <Clock className="w-4 h-4" />
-              时间戳
+              {t('block.timestamp')}
             </div>
             <div className="text-slate-900 dark:text-white">
               {formatTime(block.timestamp)}
@@ -130,7 +153,7 @@ export default async function BlockPage({ params }: PageProps) {
           <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400">
               <User className="w-4 h-4" />
-              出块节点
+              {t('block.producer')}
             </div>
             <Link
               href={`/explorer/accounts/${block.producer}`}
@@ -144,7 +167,7 @@ export default async function BlockPage({ params }: PageProps) {
           <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-2">
             <div className="flex items-center gap-2 w-40 text-sm text-slate-500 dark:text-slate-400 shrink-0">
               <Layers className="w-4 h-4" />
-              上一区块
+              {t('block.previousBlock')}
             </div>
             <Link
               href={`/explorer/blocks/${block.block_num - 1}`}
@@ -160,10 +183,10 @@ export default async function BlockPage({ params }: PageProps) {
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden">
         <div className="p-4 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            交易列表
+            {t('block.transactions')}
           </h2>
           <span className="text-sm text-slate-500 dark:text-slate-400">
-            共 {block.transactions.length} 笔
+            {t('common.total')} {block.transactions.length} {t('common.transactions')}
           </span>
         </div>
 
@@ -172,8 +195,8 @@ export default async function BlockPage({ params }: PageProps) {
             {/* Table Header */}
             <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-500 dark:text-slate-400">
               <div className="col-span-1">#</div>
-              <div className="col-span-9">交易 ID</div>
-              <div className="col-span-2">状态</div>
+              <div className="col-span-9">{t('transaction.txId')}</div>
+              <div className="col-span-2">{t('transaction.status')}</div>
             </div>
 
             <div className="divide-y divide-slate-200/50 dark:divide-white/10">
@@ -208,7 +231,7 @@ export default async function BlockPage({ params }: PageProps) {
           </>
         ) : (
           <div className="p-8 text-center text-slate-400">
-            该区块没有交易
+            {t('block.noTransactions')}
           </div>
         )}
       </div>

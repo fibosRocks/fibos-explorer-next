@@ -6,18 +6,18 @@ import { parseSearchQuery } from '@/lib/utils/search'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 interface SearchBoxProps {
-  placeholder?: string
   className?: string
   autoFocus?: boolean
 }
 
 export function SearchBox({
-  placeholder = '搜索区块、交易、账户或公钥',
   className = '',
   autoFocus = false,
 }: SearchBoxProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -41,7 +41,7 @@ export function SearchBox({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={t('search.placeholder')}
           autoFocus={autoFocus}
           className="pl-9 pr-20 h-10"
         />
@@ -51,7 +51,7 @@ export function SearchBox({
           disabled={!query.trim()}
           className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
         >
-          搜索
+          {t('search.button')}
         </Button>
       </div>
     </form>

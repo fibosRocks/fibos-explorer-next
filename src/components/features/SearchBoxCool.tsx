@@ -4,8 +4,10 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { parseSearchQuery } from '@/lib/utils/search'
 import { Search, Sparkles } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 export function SearchBoxCool() {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const router = useRouter()
@@ -51,7 +53,7 @@ export function SearchBoxCool() {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="搜索区块、交易、账户..."
+            placeholder={t('search.placeholder')}
             autoFocus
             className="
               w-full h-14 pl-14 pr-28
@@ -76,17 +78,17 @@ export function SearchBoxCool() {
             `}
           >
             <Sparkles className="w-4 h-4" />
-            搜索
+            {t('search.button')}
           </button>
         </div>
       </div>
 
       {/* Hints */}
       <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500 dark:text-slate-600">
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">区块</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">交易</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">账户</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">公钥</kbd>
+        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.block')}</kbd>
+        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.tx')}</kbd>
+        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.account')}</kbd>
+        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.pubkey')}</kbd>
       </div>
     </form>
   )

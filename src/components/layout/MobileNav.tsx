@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { mobileNavConfig } from '@/lib/constants/navigation'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface MobileNavProps {
   className?: string
@@ -11,6 +12,7 @@ interface MobileNavProps {
 
 export function MobileNav({ className }: MobileNavProps) {
   const pathname = usePathname()
+  const { t } = useTranslation()
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -49,7 +51,7 @@ export function MobileNav({ className }: MobileNavProps) {
                   active && 'text-purple-600 dark:text-cyan-400'
                 )}
               />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           )
         })}

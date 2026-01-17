@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { I18nProvider } from '@/lib/i18n'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'FIBOS ROCKS',
-  description: 'FIBOS ROCKS - 区块链浏览器',
+  description: 'FIBOS ROCKS - Blockchain Explorer',
   icons: {
     icon: '/favicon.ico',
   },
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
-          {children}
+          <I18nProvider>
+            {children}
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

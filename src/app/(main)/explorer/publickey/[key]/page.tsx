@@ -1,6 +1,11 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Key, User, ArrowRight } from 'lucide-react'
+import { Key, User, ArrowRight, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
+import { useTranslation } from '@/lib/i18n'
 
 /**
  * 公钥查询页面
@@ -11,23 +16,42 @@ import * as eos from '@/lib/services/eos'
  * 该方法返回使用指定公钥的所有账户列表
  */
 
-interface PageProps {
-  params: Promise<{ key: string }>
-}
-
-export default async function PublicKeyPage({ params }: PageProps) {
-  const { key } = await params
+export default function PublicKeyPage() {
+  const { t } = useTranslation()
+  const params = useParams()
+  const key = params.key as string
   const decodedKey = decodeURIComponent(key)
 
-  let accounts: string[] = []
-  let error: string | null = null
+  const [accounts, setAccounts] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  try {
-    const result = await eos.getKeyAccounts(decodedKey)
-    accounts = result.account_names || []
-  } catch (err) {
-    console.error('获取公钥关联账户失败:', err)
-    error = '获取数据失败或公钥无效'
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError(null)
+        const result = await eos.getKeyAccounts(decodedKey)
+        setAccounts(result.account_names || [])
+      } catch (err) {
+        console.error('获取公钥关联账户失败:', err)
+        setError(t('publicKey.fetchError'))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (decodedKey) {
+      fetchData()
+    }
+  }, [decodedKey, t])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    )
   }
 
   return (
@@ -38,8 +62,8 @@ export default async function PublicKeyPage({ params }: PageProps) {
           <Key className="w-7 h-7 text-amber-500" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">公钥查询</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">查找使用此公钥的账户</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('publicKey.title')}</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">{t('publicKey.subtitle')}</p>
         </div>
       </div>
 
@@ -47,7 +71,7 @@ export default async function PublicKeyPage({ params }: PageProps) {
       <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-6">
         <div className="flex items-center gap-2 mb-3">
           <Key className="w-4 h-4 text-amber-500" />
-          <span className="text-sm text-slate-500 dark:text-slate-400">公钥</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">{t('publicKey.publicKey')}</span>
         </div>
         <div className="font-mono text-sm text-slate-900 dark:text-white break-all bg-slate-100 dark:bg-slate-800 p-4 rounded-xl">
           {decodedKey}
@@ -58,7 +82,7 @@ export default async function PublicKeyPage({ params }: PageProps) {
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
           <div className="text-sm text-red-700 dark:text-red-300">
-            <p className="font-medium mb-1">查询失败</p>
+            <p className="font-medium mb-1">{t('common.error')}</p>
             <p className="text-red-600 dark:text-red-400">{error}</p>
           </div>
         </div>
@@ -70,10 +94,10 @@ export default async function PublicKeyPage({ params }: PageProps) {
           <div className="p-5 border-b border-slate-200/50 dark:border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="w-5 h-5 text-purple-500" />
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">关联账户</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('publicKey.relatedAccounts')}</h2>
             </div>
             <span className="text-sm text-slate-500 dark:text-slate-400">
-              共 {accounts.length} 个
+              {t('common.total')} {accounts.length} {t('common.items')}
             </span>
           </div>
 
@@ -97,7 +121,7 @@ export default async function PublicKeyPage({ params }: PageProps) {
             </div>
           ) : (
             <div className="p-8 text-center text-slate-400">
-              未找到使用此公钥的账户
+              {t('publicKey.noAccounts')}
             </div>
           )}
         </div>
@@ -106,9 +130,9 @@ export default async function PublicKeyPage({ params }: PageProps) {
       {/* Info */}
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
         <div className="text-sm text-blue-700 dark:text-blue-300">
-          <p className="font-medium mb-1">关于公钥查询</p>
+          <p className="font-medium mb-1">{t('publicKey.info')}</p>
           <p className="text-blue-600 dark:text-blue-400">
-            通过公钥可以查找所有使用该公钥的 FIBOS 账户。一个公钥可以对应多个账户。
+            {t('publicKey.infoText')}
           </p>
         </div>
       </div>
