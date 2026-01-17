@@ -2,6 +2,7 @@
 
 import { SearchBoxCool } from '@/components/features/SearchBoxCool'
 import { Navbar } from '@/components/layout/Navbar'
+import { MobileNav } from '@/components/layout/MobileNav'
 import { useTranslation } from '@/lib/i18n'
 
 export default function HomePage() {
@@ -10,7 +11,8 @@ export default function HomePage() {
   return (
     <>
       <Navbar transparent showSearch={false} />
-      <main className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
+      <MobileNav />
+      <main className="relative min-h-screen flex items-center justify-center p-6 pb-24 lg:pb-6 overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
 
       {/* Animated background - Light */}
       <div className="absolute inset-0 dark:hidden">

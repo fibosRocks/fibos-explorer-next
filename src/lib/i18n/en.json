@@ -32,7 +32,9 @@
     "resources": "Resources",
     "createAccount": "Create Account",
     "contract": "Contract",
-    "multisig": "Multisig"
+    "multisig": "Multisig",
+    "tapToSwitch": "Tap to switch",
+    "features": "features"
   },
   "search": {
     "placeholder": "Search block, tx, account...",

@@ -38,7 +38,7 @@ export function MobileNav({ className }: MobileNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 flex-1 h-full',
+                'flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-[64px]',
                 'text-xs font-medium transition-colors duration-200',
                 active
                   ? 'text-purple-600 dark:text-cyan-400'
@@ -47,7 +47,7 @@ export function MobileNav({ className }: MobileNavProps) {
             >
               <item.icon
                 className={cn(
-                  'w-5 h-5',
+                  'w-6 h-6',
                   active && 'text-purple-600 dark:text-cyan-400'
                 )}
               />

@@ -75,7 +75,7 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
             height={32}
             className="w-8 h-8"
           />
-          <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
+          <span className="hidden sm:inline bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
             FIBOS ROCKS
           </span>
         </Link>
@@ -120,11 +120,11 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
           <div className="relative">
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2.5 md:px-2 md:py-1.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors min-h-[44px] md:min-h-0"
               title="Switch Language"
             >
-              <Globe className="w-4 h-4" />
-              <span className="font-medium">{currentLocaleLabel}</span>
+              <Globe className="w-5 h-5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline font-medium">{currentLocaleLabel}</span>
             </button>
 
             {showLangMenu && (
@@ -164,11 +164,11 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
             <div className="relative">
               <button
                 onClick={() => setShowWalletMenu(!showWalletMenu)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2.5 md:py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity min-h-[44px] md:min-h-0"
               >
-                <Wallet className="w-4 h-4" />
+                <Wallet className="w-5 h-5 md:w-4 md:h-4" />
                 <span className="hidden sm:inline">{account.name}</span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-4 h-4 md:w-3 md:h-3" />
               </button>
 
               {showWalletMenu && (
@@ -219,16 +219,16 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
             <button
               onClick={() => connect()}
               disabled={connecting}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2.5 md:py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px] md:min-h-0"
             >
               {connecting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
                   <span className="hidden sm:inline">{t('common.connecting')}</span>
                 </>
               ) : (
                 <>
-                  <Wallet className="w-4 h-4" />
+                  <Wallet className="w-5 h-5 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{t('common.connect')}</span>
                 </>
               )}

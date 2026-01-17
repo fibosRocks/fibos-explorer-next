@@ -278,7 +278,7 @@ export default function NodesPage() {
               <div
                 key={node.owner}
                 className={cn(
-                  'grid grid-cols-1 md:grid-cols-12 gap-4 p-5 transition-all',
+                  'flex items-center gap-3 px-4 py-3 md:grid md:grid-cols-12 md:gap-4 md:p-5 transition-all',
                   isProducing
                     ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-l-4 border-emerald-500'
                     : 'hover:bg-slate-50 dark:hover:bg-white/5'
@@ -287,7 +287,7 @@ export default function NodesPage() {
                 {/* Rank */}
                 <div className="md:col-span-1 flex items-center">
                   <div className={cn(
-                    'w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm',
+                    'w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-xs md:text-sm',
                     node.rank <= 3
                       ? 'bg-gradient-to-br from-purple-500 to-cyan-500 text-white'
                       : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -296,10 +296,10 @@ export default function NodesPage() {
                   </div>
                 </div>
 
-                {/* Node Name */}
-                <div className="md:col-span-4 flex items-center gap-3">
+                {/* Node Name - Mobile: compact, Desktop: with icon */}
+                <div className="md:col-span-4 flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                   <div className={cn(
-                    'w-10 h-10 rounded-xl flex items-center justify-center',
+                    'hidden md:flex w-10 h-10 rounded-xl items-center justify-center',
                     isProducing
                       ? 'bg-emerald-500 animate-pulse'
                       : 'bg-slate-200 dark:bg-slate-700'
@@ -310,34 +310,36 @@ export default function NodesPage() {
                       <Monitor className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
-                  <div>
-                    <div className={cn(
-                      'font-medium',
-                      isProducing
-                        ? 'text-emerald-700 dark:text-emerald-300 font-bold'
-                        : 'text-slate-900 dark:text-white'
-                    )}>
-                      <Link href={`/explorer/accounts/${node.owner}`} className="hover:underline">
-                        {node.owner}
-                      </Link>
-                    </div>
+                  {/* Mobile: show small icon */}
+                  {isProducing && (
+                    <Zap className="w-4 h-4 text-emerald-500 md:hidden flex-shrink-0" />
+                  )}
+                  <div className={cn(
+                    'font-medium text-sm md:text-base truncate',
+                    isProducing
+                      ? 'text-emerald-700 dark:text-emerald-300 font-bold'
+                      : 'text-slate-900 dark:text-white'
+                  )}>
+                    <Link href={`/explorer/accounts/${node.owner}`} className="hover:underline">
+                      {node.owner}
+                    </Link>
                   </div>
                 </div>
 
-                {/* Status */}
-                <div className="md:col-span-3 flex items-center">
+                {/* Status - Mobile: smaller badge */}
+                <div className="md:col-span-3 flex items-center flex-shrink-0">
                   <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={isProducing} t={t} />
                 </div>
 
-                {/* Vote Percent */}
+                {/* Vote Percent - Mobile: text only, Desktop: with bar */}
                 <div className="md:col-span-4 flex items-center gap-2">
-                  <div className="flex-1 max-w-32 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="hidden md:block flex-1 max-w-32 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-500 rounded-full"
                       style={{ width: `${Math.min(parseFloat(node.votePercent) * 10, 100)}%` }}
                     />
                   </div>
-                  <span className="text-sm text-slate-600 dark:text-slate-300 font-mono w-16">
+                  <span className="text-xs md:text-sm text-slate-500 md:text-slate-600 dark:text-slate-400 md:dark:text-slate-300 font-mono">
                     {node.votePercent}%
                   </span>
                 </div>
@@ -370,21 +372,21 @@ export default function NodesPage() {
             {standbyProducers.map((node) => (
               <div
                 key={node.owner}
-                className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors opacity-75"
+                className="flex items-center gap-3 px-4 py-3 md:grid md:grid-cols-12 md:gap-4 md:p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors opacity-75"
               >
                 {/* Rank */}
                 <div className="md:col-span-1 flex items-center">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-xs md:text-sm bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
                     {node.rank}
                   </div>
                 </div>
 
                 {/* Node Name */}
-                <div className="md:col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <div className="md:col-span-4 flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                  <div className="hidden md:flex w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 items-center justify-center">
                     <Monitor className="w-5 h-5 text-slate-400" />
                   </div>
-                  <div className="font-medium text-slate-600 dark:text-slate-400">
+                  <div className="font-medium text-sm md:text-base text-slate-600 dark:text-slate-400 truncate">
                     <Link href={`/explorer/accounts/${node.owner}`} className="hover:underline hover:text-purple-600 dark:hover:text-cyan-400">
                       {node.owner}
                     </Link>
@@ -392,19 +394,19 @@ export default function NodesPage() {
                 </div>
 
                 {/* Status */}
-                <div className="md:col-span-3 flex items-center">
+                <div className="md:col-span-3 flex items-center flex-shrink-0">
                   <StatusBadge isBad={node.isBad} rank={node.rank} isProducing={false} t={t} />
                 </div>
 
                 {/* Vote Percent */}
                 <div className="md:col-span-4 flex items-center gap-2">
-                  <div className="flex-1 max-w-32 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="hidden md:block flex-1 max-w-32 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-slate-400 rounded-full"
                       style={{ width: `${Math.min(parseFloat(node.votePercent) * 10, 100)}%` }}
                     />
                   </div>
-                  <span className="text-sm text-slate-500 dark:text-slate-400 font-mono w-16">
+                  <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-mono">
                     {node.votePercent}%
                   </span>
                 </div>

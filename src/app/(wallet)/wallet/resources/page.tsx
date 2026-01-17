@@ -243,79 +243,100 @@ export default function ResourcesPage() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">{t('resources.subtitle')}</p>
       </div>
 
-      {/* Resource Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Resource Overview - Compact on mobile */}
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {/* CPU */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <Cpu className="w-5 h-5 text-cyan-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <Cpu className="w-4 h-4 md:w-5 md:h-5 text-cyan-500" />
             </div>
-            <div className="flex-1">
+            <div className="hidden md:block flex-1">
               <div className="text-sm text-slate-500 dark:text-slate-400">CPU</div>
               <div className="text-lg font-bold text-slate-900 dark:text-white">
                 {formatTime(accountStatus?.cpu.used || 0)} / {formatTime(accountStatus?.cpu.max || 0)}
               </div>
             </div>
-            <span className="text-sm text-slate-500">{getPercent(accountStatus?.cpu.used || 0, accountStatus?.cpu.max || 0).toFixed(1)}%</span>
+            <span className="hidden md:inline text-sm text-slate-500">{getPercent(accountStatus?.cpu.used || 0, accountStatus?.cpu.max || 0).toFixed(1)}%</span>
           </div>
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          {/* Mobile: show compact info */}
+          <div className="md:hidden mb-2">
+            <div className="text-xs text-slate-500 dark:text-slate-400">CPU</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+              {getPercent(accountStatus?.cpu.used || 0, accountStatus?.cpu.max || 0).toFixed(0)}%
+            </div>
+          </div>
+          <div className="h-1.5 md:h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
                 className="h-full bg-cyan-500 rounded-full transition-all duration-500"
                 style={{ width: `${getPercent(accountStatus?.cpu.used || 0, accountStatus?.cpu.max || 0)}%` }}
             />
           </div>
-          <div className="text-xs text-slate-400 mt-2">
+          <div className="hidden md:block text-xs text-slate-400 mt-2">
              {accountStatus ? `${t('resources.available')}: ${formatTime(accountStatus.cpu.available)}` : t('resources.notConnected')}
           </div>
         </div>
 
         {/* NET */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-              <Wifi className="w-5 h-5 text-blue-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Wifi className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
             </div>
-            <div className="flex-1">
+            <div className="hidden md:block flex-1">
               <div className="text-sm text-slate-500 dark:text-slate-400">NET</div>
               <div className="text-lg font-bold text-slate-900 dark:text-white">
                 {formatBytes(accountStatus?.net.used || 0)} / {formatBytes(accountStatus?.net.max || 0)}
               </div>
             </div>
-            <span className="text-sm text-slate-500">{getPercent(accountStatus?.net.used || 0, accountStatus?.net.max || 0).toFixed(1)}%</span>
+            <span className="hidden md:inline text-sm text-slate-500">{getPercent(accountStatus?.net.used || 0, accountStatus?.net.max || 0).toFixed(1)}%</span>
           </div>
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          {/* Mobile: show compact info */}
+          <div className="md:hidden mb-2">
+            <div className="text-xs text-slate-500 dark:text-slate-400">NET</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+              {getPercent(accountStatus?.net.used || 0, accountStatus?.net.max || 0).toFixed(0)}%
+            </div>
+          </div>
+          <div className="h-1.5 md:h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
                 className="h-full bg-blue-500 rounded-full transition-all duration-500"
                 style={{ width: `${getPercent(accountStatus?.net.used || 0, accountStatus?.net.max || 0)}%` }}
             />
           </div>
-          <div className="text-xs text-slate-400 mt-2">
+          <div className="hidden md:block text-xs text-slate-400 mt-2">
              {accountStatus ? `${t('resources.available')}: ${formatBytes(accountStatus.net.available)}` : t('resources.notConnected')}
           </div>
         </div>
 
         {/* RAM */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-              <HardDrive className="w-5 h-5 text-purple-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-purple-500/10 flex items-center justify-center">
+              <HardDrive className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
             </div>
-            <div className="flex-1">
+            <div className="hidden md:block flex-1">
               <div className="text-sm text-slate-500 dark:text-slate-400">RAM</div>
               <div className="text-lg font-bold text-slate-900 dark:text-white">
                  {formatBytes(accountStatus?.ram.used || 0)} / {formatBytes(accountStatus?.ram.max || 0)}
               </div>
             </div>
-            <span className="text-sm text-slate-500">{getPercent(accountStatus?.ram.used || 0, accountStatus?.ram.max || 0).toFixed(1)}%</span>
+            <span className="hidden md:inline text-sm text-slate-500">{getPercent(accountStatus?.ram.used || 0, accountStatus?.ram.max || 0).toFixed(1)}%</span>
           </div>
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          {/* Mobile: show compact info */}
+          <div className="md:hidden mb-2">
+            <div className="text-xs text-slate-500 dark:text-slate-400">RAM</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+              {getPercent(accountStatus?.ram.used || 0, accountStatus?.ram.max || 0).toFixed(0)}%
+            </div>
+          </div>
+          <div className="h-1.5 md:h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
                 className="h-full bg-purple-500 rounded-full transition-all duration-500"
                 style={{ width: `${getPercent(accountStatus?.ram.used || 0, accountStatus?.ram.max || 0)}%` }}
             />
           </div>
-          <div className="text-xs text-slate-400 mt-2">
+          <div className="hidden md:block text-xs text-slate-400 mt-2">
              {accountStatus ? `${t('resources.available')}: ${formatBytes(accountStatus.ram.available)}` : t('resources.notConnected')}
           </div>
         </div>
@@ -414,7 +435,7 @@ export default function ResourcesPage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={activeTab === 'ram' ? '0' : '0.0000'}
-                className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
               <button
                 onClick={setMax}
@@ -440,7 +461,7 @@ export default function ResourcesPage() {
                 value={receiver}
                 onChange={(e) => setReceiver(e.target.value)}
                 placeholder={t('resources.receiverHint')}
-                className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
             </div>
           )}
@@ -474,7 +495,7 @@ export default function ResourcesPage() {
             onClick={handleTransaction}
             disabled={loading || !connected}
             className={cn(
-                "w-full h-12 rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2",
+                "w-full h-12 md:h-11 rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2",
                 loading || !connected ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed" : "bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
             )}
           >

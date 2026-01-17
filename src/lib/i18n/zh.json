@@ -32,7 +32,9 @@
     "resources": "资源",
     "createAccount": "创建账户",
     "contract": "合约",
-    "multisig": "多签"
+    "multisig": "多签",
+    "tapToSwitch": "点击切换",
+    "features": "项功能"
   },
   "search": {
     "placeholder": "搜索区块、交易、账户...",

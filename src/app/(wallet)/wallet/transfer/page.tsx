@@ -155,7 +155,7 @@ export default function TransferPage() {
                 value={to}
                 onChange={(e) => setTo(e.target.value.toLowerCase())}
                 placeholder={t('transfer.recipientHint')}
-                className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
               <p className="text-xs text-slate-400 mt-2">{t('transfer.accountNameRule')}</p>
             </div>
@@ -172,7 +172,7 @@ export default function TransferPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0000"
-                    className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                    className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                   />
                   <button
                     onClick={setMaxAmount}
@@ -185,7 +185,7 @@ export default function TransferPage() {
                 <div className="relative">
                   <button
                     onClick={() => setShowTokenMenu(!showTokenMenu)}
-                    className="h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    className="h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   >
                     <span className="font-medium text-slate-900 dark:text-white">{selectedToken}</span>
                     <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -233,7 +233,7 @@ export default function TransferPage() {
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
                 placeholder={t('transfer.memoHint')}
-                className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               />
             </div>
 
@@ -256,7 +256,7 @@ export default function TransferPage() {
               onClick={handleTransfer}
               disabled={!connected || sending}
               className={cn(
-                'w-full h-12 rounded-xl font-medium flex items-center justify-center gap-2 transition-all',
+                'w-full h-12 md:h-11 rounded-xl font-medium flex items-center justify-center gap-2 transition-all',
                 connected
                   ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:opacity-90'
                   : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'

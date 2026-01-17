@@ -87,7 +87,7 @@ export default function ContractPage() {
                     value={contractName}
                     onChange={(e) => setContractName(e.target.value.toLowerCase())}
                     placeholder={t('contract.contractPlaceholder')}
-                    className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
+                    className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
                 />
             </div>
 
@@ -101,7 +101,7 @@ export default function ContractPage() {
                     value={actionName}
                     onChange={(e) => setActionName(e.target.value.toLowerCase())}
                     placeholder={t('contract.actionPlaceholder')}
-                    className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
+                    className="w-full h-12 md:h-11 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono"
                 />
             </div>
         </div>
@@ -157,7 +157,7 @@ export default function ContractPage() {
             onClick={handleSendTransaction}
             disabled={loading || !connected || !contractName || !actionName}
             className={cn(
-                "w-full h-12 rounded-xl font-medium flex items-center justify-center gap-2 transition-all",
+                "w-full h-12 md:h-11 rounded-xl font-medium flex items-center justify-center gap-2 transition-all",
                 loading || !connected
                     ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:opacity-90"

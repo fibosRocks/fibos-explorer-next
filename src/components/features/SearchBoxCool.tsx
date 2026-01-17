@@ -56,7 +56,7 @@ export function SearchBoxCool() {
             placeholder={t('search.placeholder')}
             autoFocus
             className="
-              w-full h-14 pl-14 pr-28
+              w-full h-14 md:h-14 pl-12 md:pl-14 pr-14 md:pr-28
               bg-transparent
               text-slate-900 dark:text-white text-base
               placeholder:text-slate-400 dark:placeholder:text-slate-500
@@ -68,7 +68,7 @@ export function SearchBoxCool() {
             type="submit"
             disabled={!query.trim()}
             className={`
-              absolute right-2 h-10 px-5
+              absolute right-2 h-11 md:h-10 px-4 md:px-5
               flex items-center gap-2
               rounded-xl font-medium text-sm
               transition-all duration-300
@@ -78,17 +78,17 @@ export function SearchBoxCool() {
             `}
           >
             <Sparkles className="w-4 h-4" />
-            {t('search.button')}
+            <span className="hidden sm:inline">{t('search.button')}</span>
           </button>
         </div>
       </div>
 
       {/* Hints */}
-      <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500 dark:text-slate-600">
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.block')}</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.tx')}</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.account')}</kbd>
-        <kbd className="px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.pubkey')}</kbd>
+      <div className="mt-4 flex flex-wrap justify-center gap-2 md:gap-4 text-xs text-slate-500 dark:text-slate-600">
+        <kbd className="px-2 py-1.5 md:py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.block')}</kbd>
+        <kbd className="px-2 py-1.5 md:py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.tx')}</kbd>
+        <kbd className="px-2 py-1.5 md:py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.account')}</kbd>
+        <kbd className="hidden sm:inline-block px-2 py-1.5 md:py-1 bg-white/50 dark:bg-slate-800/50 rounded border border-slate-200/50 dark:border-slate-700/50 shadow-sm">{t('search.keywords.pubkey')}</kbd>
       </div>
     </form>
   )

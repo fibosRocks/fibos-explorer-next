@@ -275,48 +275,48 @@ export default function VotingPage() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">{t('voting.subtitle')}</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Stats Cards - Compact on mobile */}
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {/* Active Producers */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-emerald-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Users className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.activeProducers')}</span>
+            <span className="hidden md:inline text-sm text-slate-500 dark:text-slate-400">{t('voting.activeProducers')}</span>
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-white">
+          <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
             {Math.min(producers.filter(p => p.is_active).length, 21)}
           </div>
-          <div className="text-sm text-slate-400 mt-1">{t('voting.activeProducersCount')}</div>
+          <div className="text-xs md:text-sm text-slate-400 mt-0.5 md:mt-1 truncate">{t('voting.activeProducersCount')}</div>
         </div>
 
         {/* My Staked */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-cyan-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-cyan-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.myStake')}</span>
+            <span className="hidden md:inline text-sm text-slate-500 dark:text-slate-400">{t('voting.myStake')}</span>
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-white">
-            {connected ? `${staked.toFixed(4)} FO` : '0 FO'}
+          <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">
+            {connected ? `${staked.toFixed(2)} FO` : '0 FO'}
           </div>
-          <div className="text-sm text-slate-400 mt-1">{t('voting.stakeForVote')}</div>
+          <div className="text-xs md:text-sm text-slate-400 mt-0.5 md:mt-1 truncate">{t('voting.stakeForVote')}</div>
         </div>
 
         {/* My Voted Producers */}
-        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-white/10 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-              <Vote className="w-5 h-5 text-purple-500" />
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl border border-slate-200/50 dark:border-white/10 p-3 md:p-5">
+          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-purple-500/10 flex items-center justify-center">
+              <Vote className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400">{t('voting.selectedCount')}</span>
+            <span className="hidden md:inline text-sm text-slate-500 dark:text-slate-400">{t('voting.selectedCount')}</span>
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-white">
+          <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
             {selectedProducers.size}
           </div>
-          <div className="text-sm text-slate-400 mt-1">{t('voting.maxVoteCount')}</div>
+          <div className="text-xs md:text-sm text-slate-400 mt-0.5 md:mt-1 truncate">{t('voting.maxVoteCount')}</div>
         </div>
       </div>
 
@@ -349,7 +349,7 @@ export default function VotingPage() {
             <button
               onClick={handleSetProxy}
               disabled={proxyVoting}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2.5 md:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50 min-h-[44px] md:min-h-0"
             >
               {proxyVoting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -432,7 +432,7 @@ export default function VotingPage() {
               onClick={handleVote}
               disabled={selectedProducers.size === 0 || voting || !connected}
               className={cn(
-                'px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all',
+                'px-6 py-3 md:py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all min-h-[44px] md:min-h-0',
                 selectedProducers.size > 0 && connected
                   ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:opacity-90'
                   : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
@@ -463,7 +463,7 @@ export default function VotingPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={selectTop21}
-                className="px-3 py-1.5 text-xs font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-colors"
+                className="px-4 py-2.5 md:px-3 md:py-1.5 text-xs font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-colors min-h-[44px] md:min-h-0"
               >
                 {t('voting.selectTop21')}
               </button>
@@ -474,7 +474,7 @@ export default function VotingPage() {
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
                   placeholder={t('voting.searchProducer')}
-                  className="h-8 pl-9 pr-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="h-10 md:h-8 pl-9 pr-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
             </div>
@@ -503,7 +503,7 @@ export default function VotingPage() {
                 key={producer.owner}
                 onClick={() => toggleProducer(producer.owner, producer.is_active)}
                 className={cn(
-                  'grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 py-3 cursor-pointer transition-colors items-center',
+                  'flex items-center gap-2 px-3 py-2.5 sm:grid sm:grid-cols-12 sm:gap-2 sm:px-4 sm:py-3 cursor-pointer transition-colors',
                   isChecked
                     ? 'bg-purple-500/5 hover:bg-purple-500/10'
                     : 'hover:bg-slate-50 dark:hover:bg-white/5',
@@ -511,7 +511,7 @@ export default function VotingPage() {
                 )}
               >
                 {/* Checkbox */}
-                <div className="sm:col-span-1 flex items-center">
+                <div className="sm:col-span-1 flex items-center flex-shrink-0">
                   {isChecked ? (
                     <CheckSquare className="w-5 h-5 text-purple-500" />
                   ) : (
@@ -520,10 +520,10 @@ export default function VotingPage() {
                 </div>
 
                 {/* Rank */}
-                <div className="sm:col-span-1">
+                <div className="sm:col-span-1 flex-shrink-0">
                   <div
                     className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs',
+                      'w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs',
                       producer.rank <= 3
                         ? 'bg-gradient-to-br from-purple-500 to-cyan-500 text-white'
                         : producer.rank <= 21
@@ -536,48 +536,48 @@ export default function VotingPage() {
                 </div>
 
                 {/* Owner */}
-                <div className="sm:col-span-4">
+                <div className="sm:col-span-4 flex-1 min-w-0">
                   <Link
                     href={`/explorer/accounts/${producer.owner}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="font-mono text-sm text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-cyan-400"
+                    className="font-mono text-sm text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-cyan-400 truncate block"
                   >
                     {producer.owner}
                   </Link>
                 </div>
 
-                {/* Votes */}
-                <div className="sm:col-span-3 font-mono text-xs text-slate-600 dark:text-slate-300">
+                {/* Votes - hidden on mobile */}
+                <div className="hidden sm:block sm:col-span-3 font-mono text-xs text-slate-600 dark:text-slate-300">
                   {parseFloat(producer.total_votes).toExponential(4)}
                 </div>
 
                 {/* Vote Percent */}
-                <div className="sm:col-span-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="sm:col-span-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="hidden sm:block flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-purple-500 rounded-full"
                         style={{ width: `${Math.min(parseFloat(votePercent) * 10, 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 w-12">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {votePercent}%
                     </span>
                   </div>
                 </div>
 
                 {/* Status */}
-                <div className="sm:col-span-1">
+                <div className="sm:col-span-1 flex-shrink-0">
                   {producer.rank <= 21 && isActive ? (
-                    <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                       {t('voting.producing')}
                     </span>
                   ) : !isActive ? (
-                    <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-500">
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-red-500/10 text-red-500">
                       {t('voting.inactive')}
                     </span>
                   ) : (
-                    <span className="text-xs px-2 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">
+                    <span className="hidden sm:inline text-xs px-2 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">
                       {t('voting.candidate')}
                     </span>
                   )}
@@ -596,7 +596,7 @@ export default function VotingPage() {
           <button
             onClick={() => connect()}
             disabled={connecting}
-            className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-6 py-3 md:py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[44px] md:min-h-0"
           >
             {connecting ? t('common.connecting') : t('common.connect')}
           </button>
