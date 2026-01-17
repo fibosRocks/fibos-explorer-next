@@ -105,4 +105,4 @@ src/
 待解决的问题：
 
 - [x] ~~**钱包切换状态问题**: 已修复。每次连接时先清除旧状态，交易时验证钱包类型一致性，不再持久化账户信息。~~
-- [ ] **eosjs-classic-fibos 多签支持**: 多签批准报错 `[ "Missing checksum256$ in approve.fields.proposal_hash", "Missing time_point?$ in proposal.fields.earliest_exec_time" ]`，需要修复 eosjs-classic-fibos 库添加缺失的类型定义
+- [x] ~~**eosjs-classic-fibos 多签支持**: 已修复。在 eosjs-classic-fibos 中添加了 binary extension 类型支持，approve action 的 proposal_hash 字段现在可以正确序列化。~~

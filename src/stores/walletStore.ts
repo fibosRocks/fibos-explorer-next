@@ -430,6 +430,31 @@ export const useWalletStore = create<WalletState>()(
           throw new Error('钱包插件不可用')
         }
 
+        // 预先序列化 eosio.msig action data，避免钱包从链上获取 ABI
+        // 因为链上 ABI 包含 binary extension 字段（如 proposal_hash），但我们的交易不需要这些字段
+        const serializedActions = await Promise.all(actions.map(async (action) => {
+          if (action.account === 'eosio.msig') {
+            // 使用本地 Fibos 实例序列化，它使用我们修改后的 ABI
+            // @ts-ignore
+            const localFibos = Fibos({
+              httpEndpoint: `${networkConfig.protocol}://${networkConfig.host}:${networkConfig.port}`,
+              chainId: networkConfig.chainId,
+              broadcast: false,
+              sign: false,
+            })
+
+            // 获取序列化后的 hex 数据
+            const struct = localFibos.fc.structs[action.name]
+            if (struct) {
+              const buf = localFibos.fc.toBuffer(action.name, action.data)
+              const hexData = buf.toString('hex')
+              console.log(`[Wallet] Pre-serialized ${action.name} data: ${hexData}`)
+              return { ...action, data: hexData }
+            }
+          }
+          return action
+        }))
+
         // 获取签名接口
         // 注意：这里需要动态导入 eosjs，避免 SSR 问题
         // 实际使用时，钱包插件会提供签名功能
@@ -466,7 +491,7 @@ export const useWalletStore = create<WalletState>()(
         }
 
         // 发送交易
-        const result = await fibos.transaction({ actions })
+        const result = await fibos.transaction({ actions: serializedActions })
 
         // 刷新账户信息
         setTimeout(() => get().refreshAccountInfo(), 1000)

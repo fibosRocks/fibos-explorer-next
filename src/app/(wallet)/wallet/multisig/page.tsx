@@ -424,8 +424,7 @@ function MultisigContent() {
                                     {t('multisig.progress')}: {proposal.provided_approvals?.length || 0} / {proposal.status?.length || 0}
                                 </span>
                             </div>
-                            {/* 操作按钮暂时隐藏，等待 eosjs-classic-fibos 修复多签类型定义后取消 hidden */}
-                            <div className="hidden items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => handleAction('approve', proposal)}
                                     disabled={loading || !connected}
@@ -590,7 +589,6 @@ function MultisigContent() {
                 {t('multisig.info')}
             </div>
             <p>{t('multisig.infoText')}</p>
-            <p className="mt-2 text-amber-600 dark:text-amber-400">{t('multisig.notAvailable')}</p>
         </div>
       </div>
     </div>
