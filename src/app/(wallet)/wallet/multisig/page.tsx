@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Check, X, Play, Trash2, Shield, Loader2, AlertCircle, Search, ChevronDown, ChevronRight } from 'lucide-react'
 import { useWalletStore } from '@/stores/walletStore'
@@ -28,7 +28,7 @@ interface ProposalData {
   open?: boolean
 }
 
-export default function MultisigPage() {
+function MultisigContent() {
   const { connected, account, connect, transact, getPermission } = useWalletStore()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -171,7 +171,7 @@ export default function MultisigPage() {
             // 合并交易详情到提案列表
             proposalDetails.forEach((detail: any) => {
                 const idx = proposals.findIndex(p => p.proposal_name === detail.proposal_name)
-                if (idx !== -1) {
+                if (idx !== -1 && proposals[idx]) {
                     proposals[idx].tx = {
                         packed_transaction: detail.packed_transaction
                     }
@@ -473,5 +473,17 @@ export default function MultisigPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MultisigPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    }>
+      <MultisigContent />
+    </Suspense>
   )
 }

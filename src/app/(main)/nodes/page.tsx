@@ -177,7 +177,7 @@ export default function NodesPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
         <p>{error}</p>
         <button
-          onClick={fetchData}
+          onClick={fetchChainData}
           className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
           重试

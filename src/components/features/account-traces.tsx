@@ -56,7 +56,8 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
       // Calculate next cursor
       let newNextCursor: number | null = null
       if (rawActions.length > 0) {
-        const lastSeq = rawActions[rawActions.length - 1].account_action_seq
+        const lastAction = rawActions[rawActions.length - 1]
+        const lastSeq = lastAction?.account_action_seq ?? 0
         if (lastSeq > 0) {
           newNextCursor = lastSeq - 1
         }
@@ -153,7 +154,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                           #{trace.block_num.toLocaleString()}
                         </Link>
                         <span>·</span>
-                        <span>{trace.block_time.split('T')[0]} {trace.block_time.split('T')[1].split('.')[0]}</span>
+                        <span>{trace.block_time.split('T')[0]} {trace.block_time.split('T')[1]?.split('.')[0] ?? ''}</span>
                       </div>
                     </div>
 

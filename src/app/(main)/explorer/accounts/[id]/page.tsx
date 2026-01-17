@@ -21,7 +21,8 @@ function getPercent(used: number, max: number): number {
 
 function parseBalance(balance?: string): number {
   if (!balance) return 0
-  return parseFloat(balance.split(' ')[0]) || 0
+  const parts = balance.split(' ')
+  return parseFloat(parts[0] ?? '0') || 0
 }
 
 export default async function AccountPage({ params }: PageProps) {

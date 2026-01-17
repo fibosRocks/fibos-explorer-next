@@ -138,7 +138,8 @@ interface FibosInterface {
  */
 function parseBalance(balance?: string): number {
   if (!balance) return 0
-  return parseFloat(balance.split(' ')[0]) || 0
+  const parts = balance.split(' ')
+  return parseFloat(parts[0] ?? '0') || 0
 }
 
 /**
@@ -241,6 +242,10 @@ export const useWalletStore = create<WalletState>()(
           }
 
           const account = identity.accounts[0]
+          if (!account) {
+            set({ error: '未获取到账户信息', connecting: false })
+            return false
+          }
 
           set({
             connected: true,

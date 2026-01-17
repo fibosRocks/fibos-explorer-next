@@ -90,7 +90,8 @@ export default function ResourcesPage() {
   const setMax = () => {
       // 简单实现，实际可能需要预留手续费
       const avail = getAvailable()
-      const val = parseFloat(avail.split(' ')[0])
+      const parts = avail.split(' ')
+      const val = parseFloat(parts[0] ?? '0')
       if (activeTab === 'ram' && action === 'unstake') {
           // 如果是 bytes
           setAmount(accountStatus?.ram.available.toString() || '0')
