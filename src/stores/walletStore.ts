@@ -211,10 +211,32 @@ export const useWalletStore = create<WalletState>()(
 
       /**
        * 连接钱包
+       * 每次连接前先清除所有旧状态，确保使用正确的钱包实例
        */
       connect: async () => {
         const { checkWallet } = get()
-        set({ connecting: true, error: null })
+
+        // 先清除所有旧状态，避免切换钱包时状态残留
+        const wallet = getWalletInstance()
+        if (wallet) {
+          try {
+            await wallet.forgetIdentity()
+          } catch {
+            // 忽略清除失败的错误
+          }
+        }
+
+        set({
+          connecting: true,
+          error: null,
+          // 清除所有旧状态
+          connected: false,
+          walletType: null,
+          account: null,
+          accountInfo: null,
+          accountStatus: null,
+          balances: [],
+        })
 
         try {
           const walletType = checkWallet()
@@ -391,10 +413,16 @@ export const useWalletStore = create<WalletState>()(
        * 发送交易
        */
       transact: async (actions: TransactionAction[]) => {
-        const { connected, account, walletType } = get()
+        const { connected, account, walletType, checkWallet } = get()
 
         if (!connected || !account) {
           throw new Error('钱包未连接')
+        }
+
+        // 验证当前钱包类型与登录时一致，避免用错私钥签名
+        const currentWalletType = checkWallet()
+        if (currentWalletType !== walletType) {
+          throw new Error(`钱包类型不匹配：登录时使用 ${walletType}，当前检测到 ${currentWalletType}。请重新连接钱包。`)
         }
 
         const wallet = getWalletInstance()
@@ -448,10 +476,9 @@ export const useWalletStore = create<WalletState>()(
     }),
     {
       name: 'fibos-wallet',
-      partialize: (state) => ({
-        // 只持久化账户信息，不持久化连接状态
-        account: state.account,
-      }),
+      // 不再持久化任何状态，每次页面刷新都需要重新连接钱包
+      // 这确保了始终使用正确的钱包实例，避免切换钱包时状态不一致
+      partialize: () => ({}),
     }
   )
 )
