@@ -3,6 +3,8 @@ import { ArrowRightLeft, Clock, Hash, Box, User, FileCode, CheckCircle, AlertCir
 import * as eos from '@/lib/services/eos'
 import type { Action, TransactionActionTrace } from '@/lib/services/types'
 
+export const runtime = 'edge'
+
 /**
  * 交易详情页面
  *

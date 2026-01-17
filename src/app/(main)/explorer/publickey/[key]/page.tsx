@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { Key, User, ArrowRight } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
 
+export const runtime = 'edge'
+
 /**
  * 公钥查询页面
  *

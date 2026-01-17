@@ -3,6 +3,8 @@ import { Box, Clock, Hash, User, Layers, CheckCircle, AlertCircle } from 'lucide
 import * as eos from '@/lib/services/eos'
 import type { Block } from '@/lib/services/types'
 
+export const runtime = 'edge'
+
 interface PageProps {
   params: Promise<{ id: string }>
 }
