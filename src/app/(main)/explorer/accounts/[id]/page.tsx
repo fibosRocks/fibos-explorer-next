@@ -9,8 +9,6 @@ import { ProxiedAccounts } from '@/components/features/proxied-accounts'
 
 import { formatBytes, formatTime, formatPercent, formatBalance, formatPublicKey } from '@/lib/utils/format'
 
-export const runtime = 'edge'
-
 interface PageProps {
   params: Promise<{ id: string }>
 }

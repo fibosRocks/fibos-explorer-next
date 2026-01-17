@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { environment } from '@/lib/config/environment'
 
-export const runtime = 'edge'
-
 /**
  * Explorer REST API 代理
  * 解决客户端组件直接调用 API 端点的 CORS 问题

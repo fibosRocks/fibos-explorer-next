@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { environment } from '@/lib/config/environment'
 
-export const runtime = 'edge'
-
 /**
  * RPC 代理 API
  * 解决客户端组件直接调用 RPC 端点的 CORS 问题

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { environment } from '@/lib/config/environment'
 
-export const runtime = 'edge'
-
 /**
  * BP 状态 API 代理
  * 解决客户端组件直接调用外部 API 的 CORS 问题
