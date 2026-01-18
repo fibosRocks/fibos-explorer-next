@@ -107,7 +107,7 @@ export function ProducerVoters({ accountName }: ProducerVotersProps) {
           {voters.map((voter, index) => (
             <div key={`${voter.owner}-${index}`} className="grid grid-cols-12 gap-4 p-4 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-sm">
               <div className="col-span-4 font-mono truncate">
-                <Link href={`/explorer/accounts/${voter.owner}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
+                <Link href={`/explorer/accounts?id=${voter.owner}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
                   {voter.owner}
                 </Link>
               </div>

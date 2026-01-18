@@ -1,21 +1,22 @@
 /**
  * Explorer API 服务 - 客户端版本
- * 通过 /api/explorer 和 /api/external 代理调用
+ * 直接调用后端 API（后端已支持 CORS）
  * 用于客户端组件 ('use client')
  *
  * 注意：此文件用于调用后端 Explorer API 和外部 API
  * EOS 节点 RPC 调用请使用 eos-client.ts
  */
 
+import { environment } from '@/lib/config/environment'
 import type { BpStatusResponse, ProducerVoter, AccountTrace, ProxiedAccount } from './types'
 
 // ==================== Explorer API ====================
 
 /**
- * 通过代理调用 Explorer API
+ * 直接调用 Explorer API
  */
 async function explorerRequest<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-  const searchParams = new URLSearchParams({ path })
+  const searchParams = new URLSearchParams()
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -25,13 +26,23 @@ async function explorerRequest<T>(path: string, params?: Record<string, string |
     })
   }
 
-  const response = await fetch(`/api/explorer?${searchParams.toString()}`)
+  const queryString = searchParams.toString()
+  const url = `${environment.apiUrl}${path}${queryString ? '?' + queryString : ''}`
+
+  const response = await fetch(url)
 
   if (!response.ok) {
     throw new Error(`Explorer API Error: ${response.status}`)
   }
 
-  return response.json()
+  const text = await response.text()
+  if (!text) return null as T
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { data: text } as T
+  }
 }
 
 /**
@@ -112,7 +123,7 @@ export async function getProxiedVote(proxyName: string): Promise<number> {
  * 外部 API: fibos123.com/bp_status
  */
 export async function getBpStatus(): Promise<BpStatusResponse> {
-  const response = await fetch('/api/external/bp-status')
+  const response = await fetch(environment.bpStatusUrl)
 
   if (!response.ok) {
     throw new Error(`BP Status API Error: ${response.status}`)

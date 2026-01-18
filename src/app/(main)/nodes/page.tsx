@@ -320,7 +320,7 @@ export default function NodesPage() {
                       ? 'text-emerald-700 dark:text-emerald-300 font-bold'
                       : 'text-slate-900 dark:text-white'
                   )}>
-                    <Link href={`/explorer/accounts/${node.owner}`} className="hover:underline">
+                    <Link href={`/explorer/accounts?id=${node.owner}`} className="hover:underline">
                       {node.owner}
                     </Link>
                   </div>
@@ -387,7 +387,7 @@ export default function NodesPage() {
                     <Monitor className="w-5 h-5 text-slate-400" />
                   </div>
                   <div className="font-medium text-sm md:text-base text-slate-600 dark:text-slate-400 truncate">
-                    <Link href={`/explorer/accounts/${node.owner}`} className="hover:underline hover:text-purple-600 dark:hover:text-cyan-400">
+                    <Link href={`/explorer/accounts?id=${node.owner}`} className="hover:underline hover:text-purple-600 dark:hover:text-cyan-400">
                       {node.owner}
                     </Link>
                   </div>

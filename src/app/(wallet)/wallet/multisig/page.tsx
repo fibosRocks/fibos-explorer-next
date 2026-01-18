@@ -6,6 +6,8 @@ import { Check, X, Play, Trash2, Shield, Loader2, AlertCircle, Search, ChevronDo
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { useTranslation } from '@/lib/i18n'
+import { parsePackedTransaction } from '@/lib/api/client'
+import { environment } from '@/lib/config/environment'
 
 type MsigAction = 'approve' | 'unapprove' | 'exec' | 'cancel'
 
@@ -105,19 +107,16 @@ function MultisigContent() {
 
     try {
         // 1. 查询 approvals2 表获取批准状态
-        const approvalsResponse = await fetch('/api/rpc', {
+        const approvalsResponse = await fetch(`${environment.blockchainUrl}/v1/chain/get_table_rows`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              path: '/v1/chain/get_table_rows',
-              data: {
                 json: true,
                 code: 'eosio.msig',
                 scope: targetProposer,
                 table: 'approvals2',
                 lower_bound: targetProposalName || undefined,
                 limit: targetProposalName ? 1 : 100
-              },
             }),
         })
 
@@ -169,19 +168,16 @@ function MultisigContent() {
         })
 
         // 2. 查询 proposal 表获取交易详情
-        const proposalResponse = await fetch('/api/rpc', {
+        const proposalResponse = await fetch(`${environment.blockchainUrl}/v1/chain/get_table_rows`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              path: '/v1/chain/get_table_rows',
-              data: {
                 json: true,
                 code: 'eosio.msig',
                 scope: targetProposer,
                 table: 'proposal',
                 lower_bound: targetProposalName || undefined,
                 limit: targetProposalName ? 1 : 100
-              },
             }),
         })
 
@@ -231,31 +227,17 @@ function MultisigContent() {
       ))
 
       try {
-        const response = await fetch('/api/parse-transaction', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ packed_transaction: proposal.tx.packed_transaction }),
-        })
-
-        if (response.ok) {
-          const parsed = await response.json()
-          setProposalList(prev => prev.map(p =>
-            p.proposal_name === name
-              ? { ...p, tx: { ...p.tx!, parsed, parsing: false } }
-              : p
-          ))
-        } else {
-          const errorData = await response.json()
-          setProposalList(prev => prev.map(p =>
-            p.proposal_name === name
-              ? { ...p, tx: { ...p.tx!, parseError: errorData.error || t('multisig.parseError'), parsing: false } }
-              : p
-          ))
-        }
-      } catch (err) {
+        const parsed = await parsePackedTransaction(proposal.tx.packed_transaction)
         setProposalList(prev => prev.map(p =>
           p.proposal_name === name
-            ? { ...p, tx: { ...p.tx!, parseError: t('multisig.parseError'), parsing: false } }
+            ? { ...p, tx: { ...p.tx!, parsed, parsing: false } }
+            : p
+        ))
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : t('multisig.parseError')
+        setProposalList(prev => prev.map(p =>
+          p.proposal_name === name
+            ? { ...p, tx: { ...p.tx!, parseError: errorMessage, parsing: false } }
             : p
         ))
       }

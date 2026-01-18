@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { useWalletStore } from '@/stores/walletStore'
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { useTranslation } from '@/lib/i18n'
+import { environment } from '@/lib/config/environment'
 
 /**
  * 创建账户页面
@@ -58,13 +59,10 @@ export default function CreateAccountPage() {
     setNameAvailable(null)
 
     try {
-      const response = await fetch('/api/rpc', {
+      const response = await fetch(`${environment.blockchainUrl}/v1/chain/get_account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: '/v1/chain/get_account',
-          data: { account_name: name },
-        }),
+        body: JSON.stringify({ account_name: name }),
       })
 
       // 如果获取到了账户信息，说明账户已存在（不可用）

@@ -1,17 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Box, Clock, Hash, User, Layers, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
 import type { Block } from '@/lib/services/types'
 import { useTranslation } from '@/lib/i18n'
 
-export default function BlockPage() {
+function BlockContent() {
   const { t } = useTranslation()
-  const params = useParams()
-  const id = params.id as string
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') || ''
 
   const [block, setBlock] = useState<Block | null>(null)
   const [chainInfo, setChainInfo] = useState<{ last_irreversible_block_num: number } | null>(null)
@@ -156,7 +156,7 @@ export default function BlockPage() {
               {t('block.producer')}
             </div>
             <Link
-              href={`/explorer/accounts/${block.producer}`}
+              href={`/explorer/accounts?id=${block.producer}`}
               className="font-mono text-purple-600 dark:text-cyan-400 hover:underline"
             >
               {block.producer}
@@ -170,7 +170,7 @@ export default function BlockPage() {
               {t('block.previousBlock')}
             </div>
             <Link
-              href={`/explorer/blocks/${block.block_num - 1}`}
+              href={`/explorer/blocks?id=${block.block_num - 1}`}
               className="font-mono text-sm text-purple-600 dark:text-cyan-400 hover:underline break-all"
             >
               {block.previous}
@@ -207,7 +207,7 @@ export default function BlockPage() {
                 return (
                   <Link
                     key={index}
-                    href={`/explorer/transactions/${txId}`}
+                    href={`/explorer/transactions?id=${txId}`}
                     className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors items-center"
                   >
                     {/* Index */}
@@ -257,5 +257,13 @@ export default function BlockPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BlockPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
+      <BlockContent />
+    </Suspense>
   )
 }

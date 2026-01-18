@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRightLeft, Clock, Hash, Box, User, FileCode, CheckCircle, AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
@@ -31,10 +31,10 @@ function extractInlineActions(traces: TransactionActionTrace[]): Action[] {
   return actions
 }
 
-export default function TransactionPage() {
+function TransactionContent() {
   const { t } = useTranslation()
-  const params = useParams()
-  const id = params.id as string
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') || ''
 
   const [transaction, setTransaction] = useState<{
     id: string
@@ -185,7 +185,7 @@ export default function TransactionPage() {
               {t('transaction.blockNumber')}
             </div>
             <Link
-              href={`/explorer/blocks/${transaction.block_num}`}
+              href={`/explorer/blocks?id=${transaction.block_num}`}
               className="font-mono text-purple-600 dark:text-cyan-400 hover:underline"
             >
               {transaction.block_num.toLocaleString()}
@@ -228,7 +228,7 @@ export default function TransactionPage() {
                       <span className="font-semibold text-slate-900 dark:text-white">{action.name}</span>
                       <span className="text-slate-400">@</span>
                       <Link
-                        href={`/explorer/accounts/${action.account}`}
+                        href={`/explorer/accounts?id=${action.account}`}
                         className="font-mono text-purple-600 dark:text-cyan-400 hover:underline"
                       >
                         {action.account}
@@ -251,7 +251,7 @@ export default function TransactionPage() {
                       {action.authorization.map((auth, authIndex) => (
                         <Link
                           key={authIndex}
-                          href={`/explorer/accounts/${auth.actor}`}
+                          href={`/explorer/accounts?id=${auth.actor}`}
                           className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
                           {auth.actor}@{auth.permission}
@@ -301,7 +301,7 @@ export default function TransactionPage() {
                     <span className="font-medium text-slate-900 dark:text-white">{action.name}</span>
                     <span className="text-slate-400">@</span>
                     <Link
-                      href={`/explorer/accounts/${action.account}`}
+                      href={`/explorer/accounts?id=${action.account}`}
                       className="font-mono text-sm text-purple-600 dark:text-cyan-400 hover:underline"
                     >
                       {action.account}
@@ -323,5 +323,13 @@ export default function TransactionPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function TransactionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
+      <TransactionContent />
+    </Suspense>
   )
 }

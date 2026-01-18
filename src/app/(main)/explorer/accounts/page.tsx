@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { User, Wallet, Cpu, HardDrive, Wifi, Clock, Vote, Coins, Key, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
@@ -25,10 +25,10 @@ function parseBalance(balance?: string): number {
   return parseFloat(parts[0] ?? '0') || 0
 }
 
-export default function AccountPage() {
+function AccountContent() {
   const { t } = useTranslation()
-  const params = useParams()
-  const id = params.id as string
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') || ''
 
   const [account, setAccount] = useState<Account | null>(null)
   const [balances, setBalances] = useState<{ quantity: string; contract: string }[]>([])
@@ -247,7 +247,7 @@ export default function AccountPage() {
                   {t('account.proxy')}
                 </div>
                 <Link
-                  href={`/explorer/accounts/${proxy}`}
+                  href={`/explorer/accounts?id=${proxy}`}
                   className="px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg text-sm font-mono hover:bg-amber-500/20 transition-colors"
                 >
                   {proxy}
@@ -262,7 +262,7 @@ export default function AccountPage() {
                   {votedProducers.map((producer) => (
                     <Link
                       key={producer}
-                      href={`/explorer/accounts/${producer}`}
+                      href={`/explorer/accounts?id=${producer}`}
                       className="px-3 py-1.5 bg-purple-500/10 text-purple-600 dark:text-cyan-400 rounded-lg text-sm font-mono hover:bg-purple-500/20 transition-colors"
                     >
                       {producer}
@@ -331,7 +331,7 @@ export default function AccountPage() {
                   {perm.required_auth.keys.map((key, index) => (
                     <Link
                       key={index}
-                      href={`/explorer/publickey/${key.key}`}
+                      href={`/explorer/publickey?key=${key.key}`}
                       className="block font-mono text-xs text-purple-600 dark:text-cyan-400 hover:underline break-all"
                     >
                       {formatPublicKey(key.key)}
@@ -347,5 +347,13 @@ export default function AccountPage() {
       {/* Transaction History */}
       <AccountTraces accountName={id} />
     </div>
+  )
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
+      <AccountContent />
+    </Suspense>
   )
 }

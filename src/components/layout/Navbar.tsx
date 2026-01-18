@@ -192,7 +192,7 @@ export function Navbar({ showSearch = true, transparent = false, className }: Na
 
                     {/* 查看账户 */}
                     <Link
-                      href={`/explorer/accounts/${account.name}`}
+                      href={`/explorer/accounts?id=${account.name}`}
                       onClick={() => setShowWalletMenu(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >

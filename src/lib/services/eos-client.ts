@@ -1,12 +1,13 @@
 /**
  * EOS RPC 服务 - 客户端版本
- * 通过 /api/rpc 代理调用，解决 CORS 问题
+ * 直接调用 FIBOS 节点 RPC（节点已支持 CORS）
  * 用于客户端组件 ('use client')
  *
  * 注意：此文件只包含 EOS 节点 RPC 调用
  * 后端 API 调用请使用 api-client.ts
  */
 
+import { environment } from '@/lib/config/environment'
 import type {
   ChainInfo,
   Producer,
@@ -14,15 +15,15 @@ import type {
 } from './types'
 
 /**
- * 通过 API 代理发送 RPC 请求
+ * 直接发送 RPC 请求到 FIBOS 节点
  */
 async function rpcRequest<T>(path: string, data?: unknown): Promise<T> {
-  const response = await fetch('/api/rpc', {
+  const response = await fetch(`${environment.blockchainUrl}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ path, data }),
+    body: data ? JSON.stringify(data) : undefined,
   })
 
   if (!response.ok) {

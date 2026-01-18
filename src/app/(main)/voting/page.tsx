@@ -372,7 +372,7 @@ export default function VotingPage() {
               <div className="text-right">
                 <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.currentProxy')}</div>
                 <Link
-                  href={`/explorer/accounts/${currentProxy}`}
+                  href={`/explorer/accounts?id=${currentProxy}`}
                   className={cn(
                     "font-mono text-sm hover:underline",
                     currentProxy === RECOMMENDED_PROXY
@@ -417,7 +417,7 @@ export default function VotingPage() {
               <div className="text-right">
                 <div className="text-xs text-slate-500 dark:text-slate-400">{t('voting.recommendedProxy')}</div>
                 <Link
-                  href={`/explorer/accounts/${RECOMMENDED_PROXY}`}
+                  href={`/explorer/accounts?id=${RECOMMENDED_PROXY}`}
                   className="font-mono text-sm text-amber-600 dark:text-amber-400 hover:underline"
                 >
                   {RECOMMENDED_PROXY}
@@ -616,7 +616,7 @@ export default function VotingPage() {
                 {/* Owner */}
                 <div className="sm:col-span-4 flex-1 min-w-0">
                   <Link
-                    href={`/explorer/accounts/${producer.owner}`}
+                    href={`/explorer/accounts?id=${producer.owner}`}
                     onClick={(e) => e.stopPropagation()}
                     className="font-mono text-sm text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-cyan-400 truncate block"
                   >
