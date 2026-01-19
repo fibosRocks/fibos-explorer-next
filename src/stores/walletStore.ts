@@ -322,26 +322,32 @@ export const useWalletStore = create<WalletState>()(
         }
 
         try {
-          // 直接调用 RPC 获取账户信息
-          const response = await fetch(`${environment.blockchainUrl}/v1/chain/get_account`, {
+          // 通过 API 代理获取账户信息
+          const response = await fetch('/api/rpc', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ account_name: account.name }),
+            body: JSON.stringify({
+              path: '/v1/chain/get_account',
+              data: { account_name: account.name },
+            }),
           })
 
           if (!response.ok) throw new Error('获取账户信息失败')
           const accountInfo: Account = await response.json()
 
           // 获取代币余额
-          const balanceResponse = await fetch(`${environment.blockchainUrl}/v1/chain/get_table_rows`, {
+          const balanceResponse = await fetch('/api/rpc', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              json: true,
-              code: environment.tokenContract,
-              scope: account.name,
-              table: 'accounts',
-              limit: 100,
+              path: '/v1/chain/get_table_rows',
+              data: {
+                json: true,
+                code: environment.tokenContract,
+                scope: account.name,
+                table: 'accounts',
+                limit: 100,
+              },
             }),
           })
 

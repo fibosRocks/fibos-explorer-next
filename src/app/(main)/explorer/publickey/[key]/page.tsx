@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Key, User, ArrowRight, Loader2 } from 'lucide-react'
 import * as eos from '@/lib/services/eos'
@@ -16,10 +16,10 @@ import { useTranslation } from '@/lib/i18n'
  * 该方法返回使用指定公钥的所有账户列表
  */
 
-function PublicKeyContent() {
+export default function PublicKeyPage() {
   const { t } = useTranslation()
-  const searchParams = useSearchParams()
-  const key = searchParams.get('key') || ''
+  const params = useParams()
+  const key = params.key as string
   const decodedKey = decodeURIComponent(key)
 
   const [accounts, setAccounts] = useState<string[]>([])
@@ -106,7 +106,7 @@ function PublicKeyContent() {
               {accounts.map((account) => (
                 <Link
                   key={account}
-                  href={`/explorer/accounts?id=${account}`}
+                  href={`/explorer/accounts/${account}`}
                   className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -137,13 +137,5 @@ function PublicKeyContent() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function PublicKeyPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>}>
-      <PublicKeyContent />
-    </Suspense>
   )
 }

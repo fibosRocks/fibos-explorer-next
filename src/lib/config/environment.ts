@@ -3,20 +3,11 @@
  * 参考原项目: /src/environments/fibos/configs/environment.ts
  */
 
-// 判断是否为开发环境
-const isDev = typeof window !== 'undefined'
-  ? window.location.hostname === 'localhost'
-  : process.env.NODE_ENV === 'development'
-
-// 生产环境直接调用后端，开发环境使用代理
-const baseUrl = isDev ? '' : 'https://fibos-tracker.chains.one'
-const bpStatusBaseUrl = isDev ? '' : 'https://api.fibos123.com'
-
 export const environment = {
   // API 端点
-  apiUrl: isDev ? '/api/explorer' : 'https://fibos-tracker.chains.one/explorer',
-  blockchainUrl: isDev ? '/api/rpc' : 'https://fibos-tracker.chains.one',
-  filterUrl: isDev ? '/api/rpc' : 'https://fibos-tracker.chains.one',
+  apiUrl: 'https://fibos-tracker.chains.one/explorer',
+  blockchainUrl: 'https://fibos-tracker.chains.one',
+  filterUrl: 'https://fibos-tracker.chains.one',
 
   // 链配置
   chain: 'fibos',
@@ -30,7 +21,7 @@ export const environment = {
   msigContract: 'eosio.msig',
 
   // 外部 API
-  bpStatusUrl: isDev ? '/api/bp-status' : 'https://api.fibos123.com/bp_status',
+  bpStatusUrl: 'https://api.fibos123.com/bp_status',
 }
 
 /**

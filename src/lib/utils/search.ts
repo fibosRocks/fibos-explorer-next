@@ -48,14 +48,14 @@ export function parseSearchQuery(query: string): SearchResult {
       // 12 位数字可能是账户名（如 fiboscouncil -> 数字账户）
       return {
         type: 'account',
-        path: `/explorer/accounts?id=${trimmed}`,
+        path: `/explorer/accounts/${trimmed}`,
         query: trimmed,
       }
     } else {
       // 其他位数的数字是区块号
       return {
         type: 'block',
-        path: `/explorer/blocks?id=${trimmed}`,
+        path: `/explorer/blocks/${trimmed}`,
         query: trimmed,
       }
     }
@@ -65,7 +65,7 @@ export function parseSearchQuery(query: string): SearchResult {
   if (trimmed.substring(0, PREFIX_LENGTH) === FIBOS_PREFIX) {
     return {
       type: 'publickey',
-      path: `/explorer/publickey?key=${trimmed}`,
+      path: `/explorer/publickey/${trimmed}`,
       query: trimmed,
     }
   }
@@ -74,7 +74,7 @@ export function parseSearchQuery(query: string): SearchResult {
   if (trimmed.length === 64 && /^[a-fA-F0-9]{64}$/.test(trimmed)) {
     return {
       type: 'transaction',
-      path: `/explorer/transactions?id=${trimmed}`,
+      path: `/explorer/transactions/${trimmed}`,
       query: trimmed,
     }
   }
@@ -82,7 +82,7 @@ export function parseSearchQuery(query: string): SearchResult {
   // 默认按账户名处理
   return {
     type: 'account',
-    path: `/explorer/accounts?id=${trimmed}`,
+    path: `/explorer/accounts/${trimmed}`,
     query: trimmed,
   }
 }

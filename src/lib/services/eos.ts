@@ -1,6 +1,6 @@
 /**
  * EOS RPC 服务
- * 封装对 FIBOS 区块链节点的 RPC 调用（节点已支持 CORS）
+ * 封装对 FIBOS 区块链节点的 RPC 调用
  * 参考原项目: /src/app/services/eos.service.ts
  */
 
@@ -16,23 +16,46 @@ import type {
 } from './types'
 
 /**
+ * 判断是否在客户端环境
+ */
+const isClient = typeof window !== 'undefined'
+
+/**
  * 通用 RPC 请求函数
- * 直接调用 FIBOS 节点 RPC
+ * 客户端使用 /api/rpc 代理，服务端直接调用
  */
 async function rpcRequest<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${environment.blockchainUrl}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  if (isClient) {
+    // 客户端：通过 API 代理
+    const response = await fetch('/api/rpc', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ path, data: body }),
+    })
 
-  if (!response.ok) {
-    throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    if (!response.ok) {
+      throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    }
+
+    return response.json()
+  } else {
+    // 服务端：直接调用 RPC
+    const response = await fetch(`${environment.blockchainUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+
+    if (!response.ok) {
+      throw new Error(`RPC Error: ${response.status} ${response.statusText}`)
+    }
+
+    return response.json()
   }
-
-  return response.json()
 }
 
 /**

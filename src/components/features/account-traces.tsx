@@ -141,7 +141,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                     <div className="sm:w-48 shrink-0">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/explorer/transactions?id=${trace.trx_id}`}
+                          href={`/explorer/transactions/${trace.trx_id}`}
                           className="font-mono text-sm text-purple-600 dark:text-cyan-400 hover:underline truncate"
                           title={trace.trx_id}
                         >
@@ -150,7 +150,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
                         <Link
-                          href={`/explorer/blocks?id=${trace.block_num}`}
+                          href={`/explorer/blocks/${trace.block_num}`}
                           className="hover:text-purple-500"
                         >
                           #{trace.block_num.toLocaleString()}
@@ -175,11 +175,11 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                           <div className="flex-1 flex justify-end min-w-0">
                             {action.name === 'transfer' && action.data ? (
                               <div className="flex flex-wrap items-center justify-end gap-x-2 text-slate-700 dark:text-slate-200">
-                                <Link href={`/explorer/accounts?id=${(action.data as any).from}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
+                                <Link href={`/explorer/accounts/${(action.data as any).from}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
                                   {(action.data as any).from}
                                 </Link>
                                 <span className="text-slate-400">→</span>
-                                <Link href={`/explorer/accounts?id=${(action.data as any).to}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
+                                <Link href={`/explorer/accounts/${(action.data as any).to}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
                                   {(action.data as any).to}
                                 </Link>
                                 <span className="font-medium whitespace-nowrap">{(action.data as any).quantity}</span>

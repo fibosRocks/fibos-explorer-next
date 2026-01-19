@@ -1,13 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 静态导出配置
-  output: 'export',
-
-  // 静态导出不支持图片优化
-  images: {
-    unoptimized: true,
-  },
-
   reactStrictMode: true,
   poweredByHeader: false,
 
@@ -20,25 +12,6 @@ const nextConfig = {
       tls: false,
     };
     return config;
-  },
-
-  // 开发环境代理配置（解决 CORS 问题）
-  // 注意：rewrites 在 output: 'export' 时不生效，但开发服务器会使用
-  async rewrites() {
-    return [
-      {
-        source: '/api/rpc/:path*',
-        destination: 'https://fibos-tracker.chains.one/:path*',
-      },
-      {
-        source: '/api/explorer/:path*',
-        destination: 'https://fibos-tracker.chains.one/explorer/:path*',
-      },
-      {
-        source: '/api/bp-status',
-        destination: 'https://api.fibos123.com/bp_status',
-      },
-    ];
   },
 
   // 环境变量

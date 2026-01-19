@@ -124,7 +124,7 @@ export function ProxiedAccounts({ accountName, isProxy }: ProxiedAccountsProps) 
               >
                 <div className="col-span-5 font-mono truncate">
                   <Link
-                    href={`/explorer/accounts?id=${account.owner}`}
+                    href={`/explorer/accounts/${account.owner}`}
                     className="text-purple-600 dark:text-cyan-400 hover:underline"
                   >
                     {account.owner}

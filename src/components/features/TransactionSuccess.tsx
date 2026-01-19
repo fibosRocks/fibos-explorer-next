@@ -18,7 +18,7 @@ export function TransactionSuccess({ message, txId, className }: TransactionSucc
       {txId && (
         <div className="mt-1">
           <Link
-            href={`/explorer/transactions?id=${txId}`}
+            href={`/explorer/transactions/${txId}`}
             className="underline hover:text-emerald-500 font-mono break-all"
           >
             {t('transaction.txId')}: {txId}
