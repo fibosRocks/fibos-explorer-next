@@ -30,7 +30,7 @@ export const environment = {
 export const networkConfig = {
   blockchain: environment.chain,
   chainId: environment.chainId,
-  host: 'fibos-tracker.chains.one',
+  host: 'fibos-full.chains.one',
   port: 443,
   protocol: 'https' as const,
 }

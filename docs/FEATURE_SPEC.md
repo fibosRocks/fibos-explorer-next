@@ -897,7 +897,7 @@ export const environment = {
   blockchainHostPort: 443,
   monitorUrl: 'https://fibos-tracker.chains.one',
   filterUrl: 'https://fibos-tracker.chains.one',
-  blockchainHost: 'fibos-tracker.chains.one',
+  blockchainHost: 'fibos-full.chains.one',
   reward_threshold: 100,
   accounts: {
     email: "fo@chains.one",
