@@ -16,13 +16,13 @@ import type {
 /**
  * 通过 API 代理发送 RPC 请求
  */
-async function rpcRequest<T>(path: string, data?: unknown): Promise<T> {
+async function rpcRequest<T>(path: string, data?: unknown, useFilter = false): Promise<T> {
   const response = await fetch('/api/rpc', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ path, data }),
+    body: JSON.stringify({ path, data, useFilter }),
   })
 
   if (!response.ok) {
@@ -36,17 +36,22 @@ async function rpcRequest<T>(path: string, data?: unknown): Promise<T> {
 /**
  * 获取账户操作历史
  * RPC: /v1/history/get_actions
+ * 走 filterUrl（fibos-tracker），参考老项目 eos.service.ts
  */
 export async function getActions(
   accountName: string,
   pos: number,
   offset: number
 ): Promise<ActionsResponse> {
-  return rpcRequest('/v1/history/get_actions', {
-    account_name: accountName,
-    pos,
-    offset,
-  })
+  return rpcRequest(
+    '/v1/history/get_actions',
+    {
+      account_name: accountName,
+      pos,
+      offset,
+    },
+    true
+  )
 }
 
 /**

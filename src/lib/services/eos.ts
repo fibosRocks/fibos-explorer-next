@@ -24,7 +24,7 @@ const isClient = typeof window !== 'undefined'
  * 通用 RPC 请求函数
  * 客户端使用 /api/rpc 代理，服务端直接调用
  */
-async function rpcRequest<T>(path: string, body?: unknown): Promise<T> {
+async function rpcRequest<T>(path: string, body?: unknown, useFilter = false): Promise<T> {
   if (isClient) {
     // 客户端：通过 API 代理
     const response = await fetch('/api/rpc', {
@@ -32,7 +32,7 @@ async function rpcRequest<T>(path: string, body?: unknown): Promise<T> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ path, data: body }),
+      body: JSON.stringify({ path, data: body, useFilter }),
     })
 
     if (!response.ok) {
@@ -42,7 +42,8 @@ async function rpcRequest<T>(path: string, body?: unknown): Promise<T> {
     return response.json()
   } else {
     // 服务端：直接调用 RPC
-    const response = await fetch(`${environment.blockchainUrl}${path}`, {
+    const baseUrl = useFilter ? environment.filterUrl : environment.blockchainUrl
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,18 +136,22 @@ export async function getTableRows<T = unknown>(options: {
 /**
  * 获取账户历史动作
  * RPC: /v1/history/get_actions
- * 注意: 需要节点启用 history_plugin 或使用自定义端点
+ * 走 filterUrl（fibos-tracker），参考老项目 eos.service.ts
  */
 export async function getActions(
   accountName: string,
   pos = -1,
   offset = -100
 ): Promise<ActionsResponse> {
-  return rpcRequest<ActionsResponse>('/v1/history/get_actions', {
-    account_name: accountName,
-    pos,
-    offset,
-  })
+  return rpcRequest<ActionsResponse>(
+    '/v1/history/get_actions',
+    {
+      account_name: accountName,
+      pos,
+      offset,
+    },
+    true
+  )
 }
 
 /**

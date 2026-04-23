@@ -8,13 +8,15 @@ import { environment } from '@/lib/config/environment'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { path, data } = body
+    const { path, data, useFilter } = body
 
     if (!path) {
       return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 })
     }
 
-    const response = await fetch(`${environment.blockchainUrl}${path}`, {
+    const baseUrl = useFilter ? environment.filterUrl : environment.blockchainUrl
+
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
