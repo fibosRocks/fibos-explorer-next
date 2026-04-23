@@ -82,7 +82,7 @@ export default function VotingPage() {
         // 并行获取全局状态和节点列表
         const [globalState, producersData] = await Promise.all([
           eosClient.getGlobalState(),
-          eosClient.getProducers(200),
+          eosClient.getProducers(500),
         ])
 
         // 设置全局投票权重
