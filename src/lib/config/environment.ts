@@ -6,7 +6,7 @@
 export const environment = {
   // API 端点
   apiUrl: 'https://fibos-tracker.chains.one/explorer',
-  blockchainUrl: 'https://fibos-tracker.chains.one',
+  blockchainUrl: 'https://fibos-full.chains.one',
   filterUrl: 'https://fibos-tracker.chains.one',
 
   // 链配置

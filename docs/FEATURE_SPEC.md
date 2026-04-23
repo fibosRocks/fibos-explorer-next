@@ -893,7 +893,7 @@ export const environment = {
   appName: 'FIBOS ROCKS Explorer',
   logoUrl: '/assets/logo.png',
   apiUrl: 'https://fibos-tracker.chains.one/explorer',
-  blockchainUrl: 'https://fibos-tracker.chains.one',
+  blockchainUrl: 'https://fibos-full.chains.one',
   blockchainHostPort: 443,
   monitorUrl: 'https://fibos-tracker.chains.one',
   filterUrl: 'https://fibos-tracker.chains.one',
