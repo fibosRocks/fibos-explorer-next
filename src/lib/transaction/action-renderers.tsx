@@ -31,6 +31,17 @@ export interface ActionRenderer {
 
 // ==================== Shared Helpers ====================
 
+/**
+ * 返回 action 名称的本地化语义标签（如 delegatebw → "抵押" / "Stake"）。
+ * 未在 i18n 中登记的 action 名返回 null，调用方可决定是否显示。
+ */
+export function useActionLabel(name: string): string | null {
+  const { t } = useTranslation()
+  const key = `transaction.actionName.${name}`
+  const value = t(key)
+  return value === key ? null : value
+}
+
 function AccountLink({ name }: { name: string }) {
   if (!name || typeof name !== 'string') return <span className="font-mono">{String(name)}</span>
   return (

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { FileCode, ChevronDown, ChevronUp, User } from 'lucide-react'
-import { lookupRenderer, CATEGORY_STYLES } from '@/lib/transaction/action-renderers'
+import { lookupRenderer, CATEGORY_STYLES, useActionLabel } from '@/lib/transaction/action-renderers'
 import type { Action } from '@/lib/services/types'
 import { useTranslation } from '@/lib/i18n'
 
@@ -19,6 +19,7 @@ export function ActionCardDetail({ action, index }: ActionCardDetailProps) {
   const category = renderer?.category
   const styles = category ? CATEGORY_STYLES[category] : null
   const Icon = renderer?.icon ?? FileCode
+  const label = useActionLabel(action.name)
 
   return (
     <div className="p-4">
@@ -28,8 +29,11 @@ export function ActionCardDetail({ action, index }: ActionCardDetailProps) {
           <Icon className={`w-5 h-5 ${styles ? styles.text : 'text-purple-500'}`} />
         </div>
         <div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-900 dark:text-white">{action.name}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="font-semibold font-mono text-slate-900 dark:text-white">{action.name}</span>
+            {label && (
+              <span className="text-sm text-slate-500 dark:text-slate-400">· {label}</span>
+            )}
             <span className="text-slate-400">@</span>
             <Link
               href={`/explorer/accounts/${action.account}`}
@@ -109,14 +113,18 @@ interface ActionCardSummaryProps {
 export function ActionCardSummary({ action }: ActionCardSummaryProps) {
   const renderer = lookupRenderer(action.account, action.name)
   const styles = renderer ? CATEGORY_STYLES[renderer.category] : null
+  const label = useActionLabel(action.name)
 
   return (
     <div className="flex items-center justify-between gap-4 text-sm w-full">
-      {/* Action badge */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Action badge + localized label */}
+      <div className="flex items-center gap-1.5 shrink-0">
         <span className={`px-1.5 py-0.5 rounded text-xs font-mono ${styles ? `${styles.bg} ${styles.text}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
           {action.name}
         </span>
+        {label && (
+          <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">{label}</span>
+        )}
       </div>
 
       {/* Summary or fallback */}
