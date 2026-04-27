@@ -90,10 +90,10 @@ export async function getBlock(blockNumOrId: number | string): Promise<Block> {
 /**
  * 获取交易信息
  * RPC: /v1/history/get_transaction
- * 注意: 需要节点启用 history_plugin
+ * 注意: 需要节点启用 history_plugin，走 filterUrl (Tracker) 以获取完整 trace
  */
 export async function getTransaction(id: string): Promise<TransactionResponse> {
-  return rpcRequest<TransactionResponse>('/v1/history/get_transaction', { id })
+  return rpcRequest<TransactionResponse>('/v1/history/get_transaction', { id }, true)
 }
 
 /**
