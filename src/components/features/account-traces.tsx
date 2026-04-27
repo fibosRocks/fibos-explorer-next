@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { Action } from '@/lib/services/types'
 import * as eos from '@/lib/services/eos-client'
 import { useTranslation } from '@/lib/i18n'
+import { ActionCardSummary } from '@/components/features/action-card'
 
 interface AccountTracesProps {
   accountName: string
@@ -163,39 +164,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                     {/* Right: Actions */}
                     <div className="flex-1 min-w-0 space-y-2">
                       {trace.actions.map((action, i) => (
-                        <div key={i} className="flex items-center justify-between gap-4 text-sm w-full">
-                          {/* Left: Action Badge */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs text-slate-500 font-mono">
-                              {action.name}
-                            </span>
-                          </div>
-
-                          {/* Right: Details */}
-                          <div className="flex-1 flex justify-end min-w-0">
-                            {action.name === 'transfer' && action.data ? (
-                              <div className="flex flex-wrap items-center justify-end gap-x-2 text-slate-700 dark:text-slate-200">
-                                <Link href={`/explorer/accounts/${(action.data as any).from}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
-                                  {(action.data as any).from}
-                                </Link>
-                                <span className="text-slate-400">→</span>
-                                <Link href={`/explorer/accounts/${(action.data as any).to}`} className="text-purple-600 dark:text-cyan-400 hover:underline">
-                                  {(action.data as any).to}
-                                </Link>
-                                <span className="font-medium whitespace-nowrap">{(action.data as any).quantity}</span>
-                                {(action.data as any).memo && (
-                                  <span className="text-slate-400 text-xs italic truncate max-w-[150px] hidden md:inline-block" title={(action.data as any).memo}>
-                                    {(action.data as any).memo}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                               <span className="text-slate-400 text-xs truncate max-w-[200px]" title={JSON.stringify(action.data)}>
-                                 {action.account}
-                               </span>
-                            )}
-                          </div>
-                        </div>
+                        <ActionCardSummary key={i} action={action} />
                       ))}
                     </div>
                   </div>
