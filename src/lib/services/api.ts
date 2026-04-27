@@ -10,7 +10,6 @@ import type {
   StatsResponse,
   AccountTrace,
   ResourcePrice,
-  BpStatusResponse,
 } from './types'
 
 const API_BASE = environment.apiUrl
@@ -199,18 +198,3 @@ export async function getFoRamHistory(): Promise<unknown> {
   return apiRequest('/fo_ram_history')
 }
 
-// ==================== 外部 API ====================
-
-/**
- * 获取 BP 节点状态 (外部 API)
- * GET https://api.fibos123.com/bp_status
- */
-export async function getBpStatus(): Promise<BpStatusResponse> {
-  const response = await fetch(environment.bpStatusUrl)
-
-  if (!response.ok) {
-    throw new Error(`BP Status API Error: ${response.status}`)
-  }
-
-  return response.json()
-}

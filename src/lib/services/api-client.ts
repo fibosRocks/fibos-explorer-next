@@ -7,7 +7,7 @@
  * EOS 节点 RPC 调用请使用 eos-client.ts
  */
 
-import type { BpStatusResponse, ProducerVoter, AccountTrace, ProxiedAccount } from './types'
+import type { ProducerHealth, ProducerVoter, AccountTrace, ProxiedAccount } from './types'
 
 // ==================== Explorer API ====================
 
@@ -105,18 +105,15 @@ export async function getProxiedVote(proxyName: string): Promise<number> {
   }
 }
 
-// ==================== 外部 API ====================
-
 /**
- * 获取 BP 节点状态
- * 外部 API: fibos123.com/bp_status
+ * 获取节点健康状态
+ * API: /producerHealth
  */
-export async function getBpStatus(): Promise<BpStatusResponse> {
-  const response = await fetch('/api/external/bp-status')
-
-  if (!response.ok) {
-    throw new Error(`BP Status API Error: ${response.status}`)
+export async function getProducerHealth(): Promise<ProducerHealth[]> {
+  try {
+    const data = await explorerRequest<unknown>('/producerHealth')
+    return Array.isArray(data) ? (data as ProducerHealth[]) : []
+  } catch {
+    return []
   }
-
-  return response.json()
 }

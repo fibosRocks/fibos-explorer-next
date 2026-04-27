@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Monitor, HardDrive, CheckCircle, Clock, Loader2, Zap } from 'lucide-react'
 import * as eosClient from '@/lib/services/eos-client'
 import * as apiClient from '@/lib/services/api-client'
-import type { ChainInfo, Producer, BpStatus } from '@/lib/services/types'
+import type { ChainInfo, Producer, ProducerHealth } from '@/lib/services/types'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
 
@@ -52,7 +52,7 @@ export default function NodesPage() {
   const { t } = useTranslation()
   const [chainInfo, setChainInfo] = useState<ChainInfo | null>(null)
   const [producers, setProducers] = useState<Producer[]>([])
-  const [bpStatusMap, setBpStatusMap] = useState<Map<string, BpStatus>>(new Map())
+  const [healthMap, setHealthMap] = useState<Map<string, ProducerHealth>>(new Map())
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,33 +82,33 @@ export default function NodesPage() {
     }
   }, [])
 
-  // 2. 获取 BP 状态（较慢，补充信息，不阻塞）
-  const fetchBpStatus = useCallback(async () => {
+  // 2. 获取节点健康状态（tracker，不阻塞）
+  const fetchHealth = useCallback(async () => {
     try {
-      const bpStatusResult = await apiClient.getBpStatus()
-      const map = new Map<string, BpStatus>()
-      bpStatusResult.rows2?.forEach((bp) => {
-        map.set(bp.bpname, bp)
+      const rows = await apiClient.getProducerHealth()
+      const map = new Map<string, ProducerHealth>()
+      rows.forEach((h) => {
+        map.set(h.producer, h)
       })
-      setBpStatusMap(map)
+      setHealthMap(map)
     } catch (err) {
-      console.warn('获取 BP 状态失败:', err)
+      console.warn('获取节点健康状态失败:', err)
       // 失败不影响主流程，仅不更新状态
     }
   }, [])
 
   useEffect(() => {
     fetchChainData()
-    fetchBpStatus()
+    fetchHealth()
 
     const chainInterval = setInterval(fetchChainData, 3000)
-    const statusInterval = setInterval(fetchBpStatus, 10000) // BP 状态更新频率稍低
+    const healthInterval = setInterval(fetchHealth, 10000) // 健康状态更新频率稍低
 
     return () => {
       clearInterval(chainInterval)
-      clearInterval(statusInterval)
+      clearInterval(healthInterval)
     }
-  }, [fetchChainData, fetchBpStatus])
+  }, [fetchChainData, fetchHealth])
 
   // 计算节点状态
   const nodes = useMemo(() => {
@@ -123,23 +123,14 @@ export default function NodesPage() {
     const totalVotes = sortedByVotes.reduce((sum, p) => sum + parseFloat(p.total_votes), 0)
 
     // 3. 判断异常的时间阈值（5分钟没出块视为异常）
-    const BAD_THRESHOLD_MS = 5 * 60 * 1000
-    const now = Date.now()
+    const BAD_THRESHOLD_SEC = 5 * 60
 
     // 4. 构建带状态的节点列表
     return sortedByVotes.map((producer, index) => {
-      const bpStatus = bpStatusMap.get(producer.owner)
+      const health = healthMap.get(producer.owner)
 
-      // 判断节点是否异常
-      let isBad = false
-      if (bpStatus?.date) {
-        const lastBlockTime = new Date(bpStatus.date).getTime()
-        isBad = (now - lastBlockTime) > BAD_THRESHOLD_MS
-      } else if (bpStatus && !bpStatus.date) {
-        // date 为 null 表示从未出块或异常
-        isBad = true
-      }
-      // 如果没有获取到 bpStatus，默认为正常 (false)，避免一开始全红
+      // 仅当拿到健康数据时才判异常，避免初次加载全红
+      const isBad = health ? health.seconds_since_last_block > BAD_THRESHOLD_SEC : false
 
       // 计算得票率
       const votes = parseFloat(producer.total_votes)
@@ -149,11 +140,11 @@ export default function NodesPage() {
         ...producer,
         rank: index + 1,
         isBad,
-        lastBlockTime: bpStatus?.date || undefined,
+        lastBlockTime: health?.last_block_time,
         votePercent,
       } as NodeWithStatus
     })
-  }, [producers, bpStatusMap])
+  }, [producers, healthMap])
 
   // 统计健康节点数
   const healthyProducers = nodes.filter((n) => n.rank <= 21 && !n.isBad).length

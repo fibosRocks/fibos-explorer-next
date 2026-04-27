@@ -320,16 +320,13 @@ export interface ResourcePrice {
 }
 
 /**
- * BP 状态 (外部 API)
+ * 节点健康状态 (tracker /producerHealth)
  */
-export interface BpStatus {
-  bpname: string
-  number: number
-  date: string | null
-}
-
-export interface BpStatusResponse {
-  rows2: BpStatus[]
+export interface ProducerHealth {
+  producer: string
+  last_block_num: number
+  last_block_time: string
+  seconds_since_last_block: number
 }
 
 // ==================== 代币相关 ====================

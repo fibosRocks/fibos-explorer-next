@@ -19,9 +19,6 @@ export const environment = {
   systemContract: 'eosio',
   tokenContract: 'eosio.token',
   msigContract: 'eosio.msig',
-
-  // 外部 API
-  bpStatusUrl: 'https://api.fibos123.com/bp_status',
 }
 
 /**

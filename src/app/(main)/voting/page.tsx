@@ -6,7 +6,8 @@ import { Vote, Users, TrendingUp, Search, CheckSquare, Square, AlertCircle, User
 import { TransactionSuccess } from '@/components/features/TransactionSuccess'
 import { cn } from '@/lib/utils'
 import * as eosClient from '@/lib/services/eos-client'
-import type { Producer } from '@/lib/services/types'
+import * as apiClient from '@/lib/services/api-client'
+import type { Producer, ProducerHealth } from '@/lib/services/types'
 import { useWalletStore } from '@/stores/walletStore'
 import { useTranslation } from '@/lib/i18n'
 
@@ -47,6 +48,7 @@ export default function VotingPage() {
   // 数据状态
   const [producers, setProducers] = useState<ProducerWithRank[]>([])
   const [totalWeight, setTotalWeight] = useState<string>('0')
+  const [healthMap, setHealthMap] = useState<Map<string, ProducerHealth>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -79,10 +81,11 @@ export default function VotingPage() {
         setLoading(true)
         setError(null)
 
-        // 并行获取全局状态和节点列表
-        const [globalState, producersData] = await Promise.all([
+        // 并行获取全局状态、节点列表和健康状态
+        const [globalState, producersData, healthRows] = await Promise.all([
           eosClient.getGlobalState(),
           eosClient.getProducers(500),
+          apiClient.getProducerHealth(),
         ])
 
         // 设置全局投票权重
@@ -98,6 +101,10 @@ export default function VotingPage() {
           }))
 
         setProducers(activeProducers)
+
+        const map = new Map<string, ProducerHealth>()
+        healthRows.forEach((h) => map.set(h.producer, h))
+        setHealthMap(map)
       } catch (err) {
         console.error('获取投票数据失败:', err)
         setError(t('voting.fetchError'))
@@ -132,6 +139,13 @@ export default function VotingPage() {
   const filteredProducers = producers.filter((producer) =>
     producer.owner.toLowerCase().includes(keywords.toLowerCase())
   )
+
+  // 节点是否异常：仅当拿到健康数据，且超过 5 分钟未出块时判异常
+  const BAD_THRESHOLD_SEC = 5 * 60
+  const isProducerBad = (owner: string) => {
+    const health = healthMap.get(owner)
+    return health ? health.seconds_since_last_block > BAD_THRESHOLD_SEC : false
+  }
 
   // 切换节点选中状态
   const toggleProducer = (owner: string, isActive: number) => {
@@ -646,13 +660,17 @@ export default function VotingPage() {
 
                 {/* Status */}
                 <div className="sm:col-span-1 flex-shrink-0">
-                  {producer.rank <= 21 && isActive ? (
-                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      {t('voting.producing')}
-                    </span>
-                  ) : !isActive ? (
+                  {!isActive ? (
                     <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-red-500/10 text-red-500">
                       {t('voting.inactive')}
+                    </span>
+                  ) : producer.rank <= 21 && isProducerBad(producer.owner) ? (
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400">
+                      {t('voting.abnormal')}
+                    </span>
+                  ) : producer.rank <= 21 ? (
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      {t('voting.producing')}
                     </span>
                   ) : (
                     <span className="hidden sm:inline text-xs px-2 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">
