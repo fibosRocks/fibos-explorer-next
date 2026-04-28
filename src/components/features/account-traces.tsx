@@ -51,21 +51,23 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
       setLoading(true)
       setError(null)
 
-      const response = await eos.getActions(accountName, cursor, -20)
+      const response = await eos.getActions(accountName, cursor, -50)
 
-      // Reverse to get newest first
-      const rawActions = [...response.actions].reverse()
-
-      // Calculate next cursor
+      // API 返回升序：actions[0] 是本批最旧的一条
+      // FIBOS 的 fibos-tracker 把 pos 解释成 global_action_seq，下一页要用 global_action_seq - 1
       let newNextCursor: number | null = null
-      if (rawActions.length > 0) {
-        const lastAction = rawActions[rawActions.length - 1]
-        const lastSeq = lastAction?.account_action_seq ?? 0
-        if (lastSeq > 0) {
-          newNextCursor = lastSeq - 1
+      if (response.actions.length > 0) {
+        const oldest = response.actions[0]
+        const oldestAccountSeq = oldest?.account_action_seq ?? 0
+        const oldestGlobalSeq = oldest?.global_action_seq ?? 0
+        if (oldestAccountSeq > 0) {
+          newNextCursor = oldestGlobalSeq - 1
         }
       }
       setNextCursor(newNextCursor)
+
+      // Reverse to get newest first for display
+      const rawActions = [...response.actions].reverse()
 
       // Group by trx_id
       const groups: GroupedTrace[] = []
