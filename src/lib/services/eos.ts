@@ -162,7 +162,7 @@ export async function getActions(
 export async function getKeyAccounts(publicKey: string): Promise<{ account_names: string[] }> {
   return rpcRequest<{ account_names: string[] }>('/v1/history/get_key_accounts', {
     public_key: publicKey,
-  })
+  }, true)
 }
 
 /**
