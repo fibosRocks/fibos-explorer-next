@@ -20,6 +20,12 @@
     "items": "",
     "transactions": "txs",
     "loadMore": "Load More",
+    "firstPage": "First",
+    "lastPage": "Last",
+    "prevPage": "Prev",
+    "nextPage": "Next",
+    "jumpTo": "Go to",
+    "page": "Page",
     "switchToLight": "Switch to Light",
     "switchToDark": "Switch to Dark"
   },

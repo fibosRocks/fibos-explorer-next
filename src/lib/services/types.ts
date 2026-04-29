@@ -208,6 +208,15 @@ export interface AccountHistoryResponse {
   last_irreversible_block: number
 }
 
+export interface AccountHistoryPagedResponse {
+  items: AccountHistoryItem[]
+  total: number
+  page: number
+  size: number
+  has_more: boolean
+  last_irreversible_block: number
+}
+
 /**
  * getActions 响应
  */

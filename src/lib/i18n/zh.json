@@ -20,6 +20,12 @@
     "items": "个",
     "transactions": "笔",
     "loadMore": "加载更多",
+    "firstPage": "首页",
+    "lastPage": "末页",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "jumpTo": "跳转至",
+    "page": "页",
     "switchToLight": "切换到浅色",
     "switchToDark": "切换到深色"
   },

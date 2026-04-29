@@ -7,7 +7,7 @@
  * EOS 节点 RPC 调用请使用 eos-client.ts
  */
 
-import type { ProducerHealth, ProducerVoter, AccountTrace, ProxiedAccount, AccountHistoryResponse } from './types'
+import type { ProducerHealth, ProducerVoter, AccountTrace, ProxiedAccount, AccountHistoryResponse, AccountHistoryPagedResponse } from './types'
 
 // ==================== Explorer API ====================
 
@@ -116,6 +116,20 @@ export async function getAccountHistory(
 ): Promise<AccountHistoryResponse> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (cursor != null) params.set('cursor', String(cursor))
+  const res = await fetch(`/api/explorer-history/${account}?${params}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error || `AccountHistory ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function getAccountHistoryPage(
+  account: string,
+  page: number,
+  size = 50,
+): Promise<AccountHistoryPagedResponse> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
   const res = await fetch(`/api/explorer-history/${account}?${params}`)
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))

@@ -11,8 +11,14 @@ export async function GET(
     const query = new URLSearchParams()
     if (searchParams.has('cursor')) query.set('cursor', searchParams.get('cursor')!)
     if (searchParams.has('limit')) query.set('limit', searchParams.get('limit')!)
+    if (searchParams.has('page')) query.set('page', searchParams.get('page')!)
+    if (searchParams.has('size')) query.set('size', searchParams.get('size')!)
 
-    const url = `${environment.filterUrl}/explorer/history/${account}?${query}`
+    const isPaged = searchParams.has('page')
+    const backendPath = isPaged
+      ? `explorer/history/${account}/paged`
+      : `explorer/history/${account}`
+    const url = `${environment.filterUrl}/${backendPath}?${query}`
     const response = await fetch(url)
 
     if (!response.ok) {
