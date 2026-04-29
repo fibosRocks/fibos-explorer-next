@@ -3,8 +3,7 @@
  * 根据输入内容智能判断搜索类型并返回跳转路径
  */
 
-const FIBOS_PREFIX = 'FO'
-const PREFIX_LENGTH = FIBOS_PREFIX.length
+const KEY_PREFIXES = ['PUB_K1_', 'PUB_R1_', 'FO', 'PUB']
 
 export type SearchType =
   | 'account'      // 账户
@@ -25,7 +24,7 @@ export interface SearchResult {
  * 规则:
  * - 纯数字 12 位 -> 账户
  * - 纯数字其他位数 -> 区块
- * - FO 开头 -> 公钥
+ * - FO/PUB/PUB_K1_/PUB_R1_ 开头 -> 公钥
  * - 64 位 hex -> 交易 ID
  * - 其他字符 -> 账户
  */
@@ -61,8 +60,8 @@ export function parseSearchQuery(query: string): SearchResult {
     }
   }
 
-  // FO 开头 -> 公钥
-  if (trimmed.substring(0, PREFIX_LENGTH) === FIBOS_PREFIX) {
+  // FO / PUB / PUB_K1_ / PUB_R1_ 开头 -> 公钥
+  if (KEY_PREFIXES.some(p => trimmed.startsWith(p))) {
     return {
       type: 'publickey',
       path: `/explorer/publickey/${trimmed}`,

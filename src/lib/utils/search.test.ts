@@ -20,6 +20,24 @@ describe('parseSearchQuery', () => {
     expect(result.path).toContain('/explorer/publickey/FO')
   })
 
+  it('should parse PUB-prefixed string as public key', () => {
+    const result = parseSearchQuery('PUB6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV')
+    expect(result.type).toBe('publickey')
+    expect(result.path).toContain('/explorer/publickey/PUB')
+  })
+
+  it('should parse PUB_K1_-prefixed string as public key', () => {
+    const result = parseSearchQuery('PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV')
+    expect(result.type).toBe('publickey')
+    expect(result.path).toContain('/explorer/publickey/PUB_K1_')
+  })
+
+  it('should parse PUB_R1_-prefixed string as public key', () => {
+    const result = parseSearchQuery('PUB_R1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV')
+    expect(result.type).toBe('publickey')
+    expect(result.path).toContain('/explorer/publickey/PUB_R1_')
+  })
+
   it('should parse 64-char hex as transaction', () => {
     const result = parseSearchQuery('a'.repeat(64))
     expect(result.type).toBe('transaction')
