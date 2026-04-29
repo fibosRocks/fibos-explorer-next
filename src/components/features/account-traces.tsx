@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowRightLeft, Loader2, ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { Action } from '@/lib/services/types'
-import * as eos from '@/lib/services/eos-client'
+import { getAccountHistory } from '@/lib/services/api-client'
 import { useTranslation } from '@/lib/i18n'
 import { ActionCardSummary } from '@/components/features/action-card'
 
@@ -26,72 +25,50 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cursor, setCursor] = useState<number | null>(null)
+  const [hasMore, setHasMore] = useState(true)
 
-  // Cursor state: -1 means start, null means no more
-  const [nextCursor, setNextCursor] = useState<number | null>(-1)
-
-  const loadTraces = useCallback(async (isInitial = false) => {
-    // Prevent loading if already loading or no more data (unless it's initial retry)
-    if (loading) return
-
-    // We need to use the current cursor.
-    // Since this function depends on state, we need to be careful.
-    // Instead of using state in the closure, let's pass cursor as arg or use ref.
-    // However, simpler is to rely on the effect to trigger initial load,
-    // and manual trigger for next pages.
-  }, []) // This is getting complicated with closures.
-
-  // Let's use a simpler approach:
-  // - fetchTraces function accepts a cursor.
-  // - useEffect calls it with -1 on mount.
-  // - Load More button calls it with current `nextCursor`.
-
-  const fetchTraces = async (cursor: number) => {
+  const fetchHistory = async (currentCursor: number | null, isInitial: boolean) => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await eos.getActions(accountName, cursor, -50)
+      const resp = await getAccountHistory(accountName, currentCursor, 50)
 
-      // API 返回升序：actions[0] 是本批最旧的一条
-      // FIBOS 的 fibos-tracker 把 pos 解释成 global_action_seq，下一页要用 global_action_seq - 1
-      let newNextCursor: number | null = null
-      if (response.actions.length > 0) {
-        const oldest = response.actions[0]
-        const oldestAccountSeq = oldest?.account_action_seq ?? 0
-        const oldestGlobalSeq = oldest?.global_action_seq ?? 0
-        if (oldestAccountSeq > 0) {
-          newNextCursor = oldestGlobalSeq - 1
+      // Server returns newest-first; group consecutive same-trx_id actions
+      const newGroups: GroupedTrace[] = []
+      for (const item of resp.items) {
+        const last = newGroups[newGroups.length - 1]
+        if (last && last.trx_id === item.trx_id) {
+          last.actions.push(item.act)
+        } else {
+          newGroups.push({
+            trx_id: item.trx_id,
+            block_num: item.block_num,
+            block_time: item.block_time,
+            actions: [item.act],
+          })
         }
       }
-      setNextCursor(newNextCursor)
 
-      // Reverse to get newest first for display
-      const rawActions = [...response.actions].reverse()
-
-      // Group by trx_id
-      const groups: GroupedTrace[] = []
-      let currentGroup: GroupedTrace | null = null
-
-      for (const trace of rawActions) {
-        const trxId = trace.action_trace.trx_id
-
-        if (!currentGroup || currentGroup.trx_id !== trxId) {
-          if (currentGroup) groups.push(currentGroup)
-          currentGroup = {
-            trx_id: trxId,
-            block_num: trace.block_num,
-            block_time: trace.block_time,
-            actions: []
+      setGroupedTraces(prev => {
+        if (isInitial) return newGroups
+        // Merge cross-page: if last group of prev and first group of new share trx_id
+        const prevLast = prev[prev.length - 1]
+        const firstNew = newGroups[0]
+        if (prevLast && firstNew && prevLast.trx_id === firstNew.trx_id) {
+          const merged = [...prev]
+          merged[merged.length - 1] = {
+            ...prevLast,
+            actions: [...prevLast.actions, ...firstNew.actions],
           }
+          return [...merged, ...newGroups.slice(1)]
         }
-        currentGroup.actions.push(trace.action_trace.act)
-      }
-      if (currentGroup) groups.push(currentGroup)
+        return [...prev, ...newGroups]
+      })
 
-      // Append or Replace
-      setGroupedTraces(prev => cursor === -1 ? groups : [...prev, ...groups])
-
+      setCursor(resp.next_cursor)
+      setHasMore(resp.has_more)
     } catch (err) {
       console.error('Failed to fetch transactions:', err)
       setError(t('account.fetchError'))
@@ -101,18 +78,18 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
     }
   }
 
-  // Reset and load initial
   useEffect(() => {
     setGroupedTraces([])
-    setNextCursor(-1)
+    setCursor(null)
+    setHasMore(true)
     setInitialLoading(true)
-    fetchTraces(-1)
+    fetchHistory(null, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountName])
 
   const handleLoadMore = () => {
-    if (nextCursor !== null) {
-      fetchTraces(nextCursor)
+    if (!loading && hasMore) {
+      fetchHistory(cursor, false)
     }
   }
 
@@ -140,7 +117,6 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
               {groupedTraces.map((trace, index) => (
                 <div key={`${trace.trx_id}-${index}`} className="p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                   <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    {/* Left: TX Info */}
                     <div className="sm:w-48 shrink-0">
                       <div className="flex items-center gap-2">
                         <Link
@@ -163,7 +139,6 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
                       </div>
                     </div>
 
-                    {/* Right: Actions */}
                     <div className="flex-1 min-w-0 space-y-2">
                       {trace.actions.map((action, i) => (
                         <ActionCardSummary key={i} action={action} />
@@ -174,8 +149,7 @@ export function AccountTraces({ accountName }: AccountTracesProps) {
               ))}
             </div>
 
-            {/* Load More Button */}
-            {nextCursor !== null && (
+            {hasMore && (
               <div className="p-4 border-t border-slate-200/50 dark:border-white/10">
                 <button
                   onClick={handleLoadMore}

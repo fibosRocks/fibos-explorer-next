@@ -190,6 +190,25 @@ export interface TableRowsResponse<T = unknown> {
 }
 
 /**
+ * /v1/account-history 接口 - cursor 分页
+ */
+export interface AccountHistoryItem {
+  action_id: number
+  global_sequence: string
+  trx_id: string
+  block_num: number
+  block_time: string
+  act: Action
+}
+
+export interface AccountHistoryResponse {
+  items: AccountHistoryItem[]
+  next_cursor: number | null
+  has_more: boolean
+  last_irreversible_block: number
+}
+
+/**
  * getActions 响应
  */
 export interface ActionsResponse {

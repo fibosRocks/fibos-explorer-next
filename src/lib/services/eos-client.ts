@@ -117,3 +117,4 @@ export async function getGlobalState() {
   })
   return result.rows[0]
 }
+
